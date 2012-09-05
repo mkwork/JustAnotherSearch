@@ -14,3 +14,7 @@ gen/
 
 # Local configuration file (sdk path, etc)
 local.properties
+
+/gen
+/gen/com/epam/AnotherSearch/BuildConfig.java
+/gen/com/epam/AnotherSearch/R.java
