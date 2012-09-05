@@ -14,3 +14,14 @@ gen/
 
 # Local configuration file (sdk path, etc)
 local.properties
+
+/bin
+/bin/classes
+/bin/jarlist.cache
+/bin/classes/com/epam/AnotherSearch/AnotherSearchActivity.class
+/bin/classes/com/epam/AnotherSearch/R$drawable.class
+/bin/classes/com/epam/AnotherSearch/R$attr.class
+/bin/classes/com/epam/AnotherSearch/R$layout.class
+/bin/classes/com/epam/AnotherSearch/R$string.class
+/bin/classes/com/epam/AnotherSearch/R.class
+/bin/classes/com/epam/AnotherSearch/BuildConfig.class
