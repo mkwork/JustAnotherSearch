@@ -25,3 +25,7 @@ local.properties
 /bin/classes/com/epam/AnotherSearch/R$string.class
 /bin/classes/com/epam/AnotherSearch/R.class
 /bin/classes/com/epam/AnotherSearch/BuildConfig.class
+
+/gen
+/gen/com/epam/AnotherSearch/BuildConfig.java
+/gen/com/epam/AnotherSearch/R.java
