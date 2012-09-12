@@ -1,10 +1,8 @@
 package com.epam.AnotherSearch;
 
-import org.w3c.dom.ls.LSInput;
-
 import android.app.Activity;
+import android.app.SearchManager;
 import android.os.Bundle;
-import android.widget.GridView;
 import android.widget.ListView;
 
 public class AnotherSearchActivity extends Activity {
@@ -14,6 +12,6 @@ public class AnotherSearchActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
     ListView listView = (ListView)findViewById(R.id.lvSearchResults);
-    listView.setAdapter(new CategorizedAdapter());
+    listView.setAdapter(new ContentSearchAdapter(this));
     }
 }
