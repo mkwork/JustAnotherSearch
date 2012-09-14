@@ -7,7 +7,10 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class SearchAdapter extends BaseAdapter {
@@ -51,23 +54,46 @@ public class SearchAdapter extends BaseAdapter {
 	}
 
 	public View getView(int position, View convertView, ViewGroup parent) {
-		TextView tv = null;
+		LinearLayout layout = null;
+		TextView textView = null;
+		ImageView iconView = null;
 		try
 		{
+			
 			SuggestionIndex index = findSuggestion(position);
 			SuggestionData data = getSuggestionData(index);
-			tv = (TextView)convertView;
-			if(tv == null)
+			layout = (LinearLayout)convertView;
+			
+			if(layout == null)
 			{
-				tv = new TextView(parent.getContext());
+				layout = new LinearLayout(parent.getContext());
+				LinearLayout.LayoutParams textViewParams = 
+	        			new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT);
+	        	LinearLayout.LayoutParams imageViewParams = 
+	        			new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT);
+	        	        	
+	        	textViewParams.weight = 0.80f;
+	        	imageViewParams.weight = 0.20f;
+	        	
+				textView = new TextView(parent.getContext());
+				iconView = new ImageView(parent.getContext());
+				layout.addView(textView, textViewParams);
+				layout.addView(iconView, imageViewParams);
+				
 			}
-			tv.setText(data.getText());
+			else
+			{
+				textView = (TextView)layout.getChildAt(0);
+				iconView = (ImageView)layout.getChildAt(1);
+			}
+			textView.setText(data.getText());
+			iconView.setImageDrawable(data.getIcon());
 		}catch (Exception e) {
 			e.printStackTrace();
-			tv = new TextView(parent.getContext());
-			tv.setText("Error");
+			textView = new TextView(parent.getContext());
+			textView.setText("Error");
 		}
-		return tv;
+		return layout;
 	}
 	
 	//Implementation
@@ -78,13 +104,13 @@ public class SearchAdapter extends BaseAdapter {
 		
 		SuggestionData data = new SuggestionData(null, null);
 		if (index.isCategory()){
-			data.setIcon(null);
-			data.setText(index.getSuggestion().getSearchable().getSearchActivity().getPackageName());
+			data.setIcon(index.getSuggestion().getIcon());
+			data.setText(index.getSuggestion().getText() + "\n" + index.getSuggestion().getHint());
 		}
 		else
 		{
 			data.setIcon(index.getSuggestion().getIcon(index.getIndex()));
-			data.setText(index.getSuggestion().getSuggestion(index.getIndex()));
+			data.setText(index.getSuggestion().getText(index.getIndex()));
 		}
 		return data;
 	}

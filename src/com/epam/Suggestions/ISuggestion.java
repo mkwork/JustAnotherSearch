@@ -20,6 +20,22 @@ Suggestions getParent();
  */
 int getCount();
 
+
+/**
+ * @return icon for this suggestion object
+ */
+Drawable getIcon();
+
+/**
+ * @return text for this suggestion object
+ */
+String getText();
+
+/**
+ * @return hint text for this suggestion object
+ */
+String getHint();
+//String getText
 /** Obtains icon for suggestion
  * @param pos position in dataset
  * @return icon or null
@@ -30,7 +46,7 @@ Drawable getIcon(int pos);
  * @param pos position in dataset
  * @return suggestion or null
  */
-String   getSuggestion(int pos);
+String   getText(int pos);
 
 /**Obtains cursor for manual data reading
  * @return cursor or null
