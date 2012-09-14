@@ -73,8 +73,9 @@ public class SuggestionOfSearchable implements ISuggestion {
 	}
 
 	public String getSuggestion(int pos) {
-		// TODO Auto-generated method stub
-		return null;
+		mCursor.moveToPosition(pos);
+		
+		return mCursor.getString(mCursor.getColumnIndex(SearchManager.SUGGEST_COLUMN_TEXT_1));
 	}
 
 	/* (non-Javadoc)
@@ -102,7 +103,7 @@ public class SuggestionOfSearchable implements ISuggestion {
 		String selection = msInfo.getSuggestSelection();
 		String[] selectionArgs = 
 				{
-					getParent().getQuery()
+					getParent().getQuery().toString()
 				};
 		String sortOrder = SearchManager.SUGGEST_COLUMN_TEXT_1;
 		Uri uri = getSuggestUriBase(msInfo);
@@ -110,7 +111,7 @@ public class SuggestionOfSearchable implements ISuggestion {
 		if (selection == null)
 		{
 			
-			uri = uri.buildUpon().appendEncodedPath(getParent().getQuery()).build();
+			uri = uri.buildUpon().appendPath( getParent().getQuery().toString()).build();
 		}
 		Integer limit = getParent().getQueryLimmit();
 		if (limit != null)

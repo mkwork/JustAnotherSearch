@@ -4,6 +4,7 @@ import com.epam.Suggestions.ISuggestion;
 import com.epam.Suggestions.Suggestions;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -16,18 +17,25 @@ public class SearchAdapter extends BaseAdapter {
 		super();
 		mSuggestions = new Suggestions(context);
 	}
-	public void setQuery(String query)
+	public void setQuery(CharSequence s)
 	{
-		mSuggestions.setQuery(query);
-		mSuggestions.setQueryLimmit(1);
+		
+		mSuggestions.setQuery(s);
 		mSuggestions.reload();
 		notifyDataSetChanged();
 	}
 	public int getCount() {
+		if(mSuggestions.getQuery() == null || mSuggestions.getQuery().toString().isEmpty())
+		{
+			return 0;
+		}
 		int count = 0;
 		for (ISuggestion suggestion : mSuggestions.getSuggestions()) {
-			count ++;
-			count += suggestion.getCount();
+			if(suggestion.getCount() > 0)
+			{
+				count ++;
+				count += suggestion.getCount();
+			}
 		}
 		return count;
 	}
@@ -43,54 +51,131 @@ public class SearchAdapter extends BaseAdapter {
 	}
 
 	public View getView(int position, View convertView, ViewGroup parent) {
-		if(convertView == null)
+		TextView tv = null;
+		try
 		{
-			if(isCategory(position))
+			SuggestionIndex index = findSuggestion(position);
+			SuggestionData data = getSuggestionData(index);
+			tv = (TextView)convertView;
+			if(tv == null)
 			{
-				return createCategoryView(position, parent);
+				tv = new TextView(parent.getContext());
 			}
-			else
-			{
-				return createSuggestionView(position, parent);
-			}
+			tv.setText(data.getText());
+		}catch (Exception e) {
+			e.printStackTrace();
+			tv = new TextView(parent.getContext());
+			tv.setText("Error");
 		}
-		else
-		{
-			return convertView;
-		}
+		return tv;
 	}
 	
 	//Implementation
-	private Boolean isCategory(int pos)
+		
+	
+	private SuggestionData getSuggestionData(SuggestionIndex index)
 	{
-		int finded = 0;
+		
+		SuggestionData data = new SuggestionData(null, null);
+		if (index.isCategory()){
+			data.setIcon(null);
+			data.setText(index.getSuggestion().getSearchable().getSearchActivity().getPackageName());
+		}
+		else
+		{
+			data.setIcon(index.getSuggestion().getIcon(index.getIndex()));
+			data.setText(index.getSuggestion().getSuggestion(index.getIndex()));
+		}
+		return data;
+	}
+	
+	private SuggestionIndex findSuggestion(int pos)
+	{
+		int i = 0;
+	
 		for (ISuggestion suggestion : mSuggestions.getSuggestions()) {
-			if (finded == pos)
+			if(suggestion.getCount() <= 0)
 			{
-				return true;
+				 continue;
+				 
+			}
+			if (i == pos || pos <= i + suggestion.getCount() )
+			{
+				Integer index = null;
+				if (i != pos)
+				{
+					index = i + suggestion.getCount() - pos;
+				}
+				SuggestionIndex sIndex = new SuggestionIndex(suggestion, index);
+				sIndex.setIsCategory(i == pos);
+								
+				return sIndex;
 			}
 			
-			finded += suggestion.getCount();
+			i+= suggestion.getCount() + 1;
+			
 		}
-		return true;
-	}
-	
-	private View createSuggestionView(int position, ViewGroup parent)
-	{
-		TextView tv = new TextView(parent.getContext());
-		tv.setText("just suggestion");
-		
-		return tv;
-	}
-	
-	private View createCategoryView(int position, ViewGroup parent)
-	{
-		TextView tv = new TextView(parent.getContext());
-		tv.setText("just category");
-		
-		return tv;
+		return null;
 	}
 	
 	//Data
+	private class SuggestionIndex
+	{
+		public SuggestionIndex(ISuggestion suggestion, Integer index)
+		{
+			super();
+			setSuggestion(suggestion);
+			setIndex(index);
+		}
+		
+		public ISuggestion getSuggestion() {
+			return suggestion;
+		}
+		public void setSuggestion(ISuggestion suggestion) {
+			this.suggestion = suggestion;
+		}
+		public Integer getIndex() {
+			return index;
+		}
+		public void setIndex(Integer index) {
+			this.index = index;
+		}
+		
+		private Boolean isCategory() {
+			return isCategory;
+		}
+
+		private void setIsCategory(Boolean isCategory) {
+			this.isCategory = isCategory;
+		}
+
+		private ISuggestion suggestion = null;
+		private Integer index = null;
+		private Boolean isCategory = false;
+	}
+	
+	private class SuggestionData
+	{
+		public SuggestionData(String text,Drawable icon)
+		{
+			setIcon(icon);
+			setText(text);
+		}
+		public Drawable getIcon() {
+			return icon;
+		}
+		public void setIcon(Drawable icon) {
+			this.icon = icon;
+		}
+		public String getText() {
+			return text;
+		}
+		public void setText(String text) {
+			this.text = text;
+		}
+		private Drawable icon;
+		private String text;
+		
+	}
 	private Suggestions mSuggestions;
 }

@@ -2,6 +2,10 @@ package com.epam.AnotherSearch;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.EditText;
+import android.widget.ListView;
 
 public class AnotherSearchActivity extends Activity {
     /** Called when the activity is first created. */
@@ -9,6 +13,44 @@ public class AnotherSearchActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        mSearchAdapter = new SearchAdapter(this);
+        ((ListView)findViewById(R.id.lvSearchResults)).setAdapter(mSearchAdapter);
+        ((EditText)findViewById(R.id.etSearch)).addTextChangedListener(new TextEditSearchEventslistener());
     
     }
+    
+    private class TextEditSearchEventslistener implements TextWatcher
+    {
+    	public TextEditSearchEventslistener()
+    	{
+    		super();
+    	}
+
+		public void afterTextChanged(Editable s) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void beforeTextChanged(CharSequence s, int start, int count,
+				int after) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void onTextChanged(CharSequence s, int start, int before,
+				int count) {
+			try
+			{
+				mSearchAdapter.setQuery(s);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			
+		}
+    	
+    }
+    
+    private SearchAdapter mSearchAdapter = null;
 }

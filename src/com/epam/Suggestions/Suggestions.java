@@ -52,12 +52,12 @@ public class Suggestions implements ISuggestionEvents {
 	}
 	
 	//Interface
-	public String getQuery() {
+	public CharSequence getQuery() {
 		return mQuery;
 	}
 
-	public void setQuery(String mQuery) {
-		this.mQuery = mQuery;
+	public void setQuery(CharSequence s) {
+		this.mQuery = s;
 	}
 	
 	public List<ISuggestion> getSuggestions()
@@ -69,7 +69,13 @@ public class Suggestions implements ISuggestionEvents {
 	{
 		OnReloadStart();
 		for (ISuggestion suggestion : mSuggestions) {
-			suggestion.select();
+			try
+			{
+				suggestion.select();
+			}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 			OnSuggestionLoaded(suggestion);
 		}		
 		OnReloadFinished();
@@ -108,7 +114,7 @@ public class Suggestions implements ISuggestionEvents {
 	}
 	
 		//Data
-		private String mQuery = null;
+		private CharSequence mQuery = null;
 		private Integer mQueryLimmit = null;
 		private List<SearchableInfo> mSearchables = new ArrayList<SearchableInfo>();
 		private List<ISuggestion> mSuggestions = new ArrayList<ISuggestion>();
