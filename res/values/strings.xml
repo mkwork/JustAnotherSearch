@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, AnotherSearchActivity!</string>
+    <string name="hello">AnotherSearchActivity!</string>
     <string name="app_name">AnotherSearch</string>
+    <string name="search_button">Find</string>
+    <string name="search_hint">Input yours search request</string>
 
 </resources>
