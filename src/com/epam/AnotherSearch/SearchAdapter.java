@@ -4,10 +4,8 @@ import com.epam.Suggestions.ISuggestion;
 import com.epam.Suggestions.Suggestions;
 
 import android.content.Context;
-import android.content.res.Resources.Theme;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
@@ -70,6 +68,7 @@ public class SearchAdapter extends BaseAdapter {
 			if(layout == null)
 			{
 				layout = new LinearLayout(parent.getContext());
+				
 				LinearLayout.LayoutParams textViewParams = 
 	        			new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
 	        	LinearLayout.LayoutParams imageViewParams = 
@@ -83,8 +82,6 @@ public class SearchAdapter extends BaseAdapter {
 								iconView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 				layout.addView(textView, textViewParams);
 				layout.addView(iconView, imageViewParams);
-				
-				
 				
 			}
 			else
@@ -100,15 +97,11 @@ public class SearchAdapter extends BaseAdapter {
 			}
 			else
 			{
-				TypedValue tv = new TypedValue();
-				parent.getContext().getTheme().
-						resolveAttribute(android.R.attr.background, tv, true);
-				layout.setBackgroundColor(parent.getContext().getResources().getColor(tv.resourceId));
+				layout.setBackgroundColor(layout.getDrawingCacheBackgroundColor());				
 			}
 		}catch (Exception e) {
 			e.printStackTrace();
-			textView = new TextView(parent.getContext());
-			textView.setText("Error");
+			
 		}
 		return layout;
 	}
