@@ -11,7 +11,7 @@ import android.text.TextWatcher;
 import android.widget.EditText;
 import android.widget.ListView;
 
-public class AnotherSearchActivity extends Activity {
+public class AnotherSearchActivity extends Activity implements ISearchProcessListener{
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -21,11 +21,12 @@ public class AnotherSearchActivity extends Activity {
         ((ListView)findViewById(R.id.lvSearchResults)).setAdapter(mSearchAdapter);
         EditText searchView = ((EditText)findViewById(R.id.etSearch));
         searchView.addTextChangedListener(new TextEditSearchEventslistener());
-        
+        mSearchAdapter.addSearchProcessListener(this);
        /* searchView.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.search_spin, 0);
         Drawable drawable = searchView.getCompoundDrawables()[2];
         android.graphics.drawable.Animatable animation = (android.graphics.drawable.Animatable)drawable; 
         animation.start();*/
+    
     
     }
     
@@ -63,4 +64,18 @@ public class AnotherSearchActivity extends Activity {
     }
     
     private SearchAdapter mSearchAdapter = null;
+
+	public void onSearchStarted() {
+		EditText searchView = ((EditText)findViewById(R.id.etSearch));
+		searchView.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.search_spin, 0);
+        Drawable drawable = searchView.getCompoundDrawables()[2];
+        android.graphics.drawable.Animatable animation = (android.graphics.drawable.Animatable)drawable; 
+        animation.start();
+        		
+	}
+
+	public void onSearchFinished() {
+		EditText searchView = ((EditText)findViewById(R.id.etSearch));
+		searchView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+	}
 }

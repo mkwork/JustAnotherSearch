@@ -1,10 +1,14 @@
 package com.epam.AnotherSearch;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.epam.Suggestions.ISuggestion;
 import com.epam.Suggestions.ISuggestionEvents;
 import com.epam.Suggestions.Suggestions;
 
 import android.content.Context;
+import android.database.Observable;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -31,6 +35,9 @@ public class SearchAdapter extends BaseAdapter {
 		mTask.cancel(false);
 		mTask = new SuggestionUpdateTask(this);
 		mTask.getSuggestions().setQuery(s);
+		for (ISearchProcessListener listener : mSearchProcessListeners) {
+			listener.onSearchStarted();
+		}
 		mTask.execute();
 		
 	}
@@ -117,6 +124,16 @@ public class SearchAdapter extends BaseAdapter {
 		return layout;
 	}
 	
+	public void addSearchProcessListener(ISearchProcessListener listener)
+	{
+		if (!mSearchProcessListeners.contains(listener))
+			mSearchProcessListeners.add(listener);
+	}
+	
+	public void removeSearchProcessListener(ISearchProcessListener listener)
+	{
+		mSearchProcessListeners.remove(listener);
+	}
 	//Implementation
 		
 	
@@ -171,6 +188,9 @@ public class SearchAdapter extends BaseAdapter {
 	}
 	
 	//Data
+	private SuggestionUpdateTask mTask = null;
+	private Context mContext = null;
+	private List<ISearchProcessListener> mSearchProcessListeners = new ArrayList<ISearchProcessListener>();
 	private class SuggestionIndex
 	{
 		public SuggestionIndex(ISuggestion suggestion, Integer index)
@@ -230,13 +250,29 @@ public class SearchAdapter extends BaseAdapter {
 		
 	}
 	
-	private SuggestionUpdateTask mTask = null;
-	private Context mContext = null;
+	
+	
 
 	
 	private class SuggestionUpdateTask extends AsyncTask<Void, Void, Void> 
 	implements ISuggestionEvents
 	{
+
+		@Override
+		protected void onPostExecute(Void result) {
+			for (ISearchProcessListener listener : mSearchProcessListeners) {
+				listener.onSearchFinished();
+			}
+			super.onPostExecute(result);
+		}
+
+		@Override
+		protected void onPreExecute() {
+			for (ISearchProcessListener listener : mSearchProcessListeners) {
+				listener.onSearchStarted();
+			}
+			super.onPreExecute();
+		}
 
 		public SuggestionUpdateTask(SearchAdapter adapter)
 		{
