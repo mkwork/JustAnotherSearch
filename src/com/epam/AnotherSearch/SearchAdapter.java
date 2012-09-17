@@ -4,7 +4,10 @@ import com.epam.Suggestions.ISuggestion;
 import com.epam.Suggestions.Suggestions;
 
 import android.content.Context;
+import android.content.res.Resources.Theme;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
@@ -68,17 +71,20 @@ public class SearchAdapter extends BaseAdapter {
 			{
 				layout = new LinearLayout(parent.getContext());
 				LinearLayout.LayoutParams textViewParams = 
-	        			new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT);
+	        			new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
 	        	LinearLayout.LayoutParams imageViewParams = 
-	        			new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT);
+	        			new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
 	        	        	
 	        	textViewParams.weight = 0.80f;
 	        	imageViewParams.weight = 0.20f;
 	        	
 				textView = new TextView(parent.getContext());
 				iconView = new ImageView(parent.getContext());
+								iconView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
 				layout.addView(textView, textViewParams);
 				layout.addView(iconView, imageViewParams);
+				
+				
 				
 			}
 			else
@@ -88,6 +94,17 @@ public class SearchAdapter extends BaseAdapter {
 			}
 			textView.setText(data.getText());
 			iconView.setImageDrawable(data.getIcon());
+			if(index.isCategory())
+			{
+				layout.setBackgroundColor(Color.GRAY);
+			}
+			else
+			{
+				TypedValue tv = new TypedValue();
+				parent.getContext().getTheme().
+						resolveAttribute(android.R.attr.background, tv, true);
+				layout.setBackgroundColor(parent.getContext().getResources().getColor(tv.resourceId));
+			}
 		}catch (Exception e) {
 			e.printStackTrace();
 			textView = new TextView(parent.getContext());
@@ -105,7 +122,8 @@ public class SearchAdapter extends BaseAdapter {
 		SuggestionData data = new SuggestionData(null, null);
 		if (index.isCategory()){
 			data.setIcon(index.getSuggestion().getIcon());
-			data.setText(index.getSuggestion().getText() + "\n" + index.getSuggestion().getHint());
+			data.setText(index.getSuggestion().getText() + (  
+			index.getSuggestion().getHint() != null ?  "\n" + index.getSuggestion().getHint() : "") );
 		}
 		else
 		{

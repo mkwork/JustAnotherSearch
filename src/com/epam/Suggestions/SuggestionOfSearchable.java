@@ -54,21 +54,17 @@ public class SuggestionOfSearchable implements ISuggestion {
 	 * @see com.epam.Suggestions.ISuggestion#getText()
 	 */
 	public String getText() {
-		int id = msInfo.getSettingsDescriptionId();
-		if (id != 0)
-		{
-			try {
-				return getParent().
-				getContext().
-				getPackageManager().
-				getResourcesForApplication(msInfo.getSuggestPackage()).getString(id);
+		
+		try {
+			PackageManager pm = getParent().getContext().getPackageManager();
+				return pm.getActivityInfo(msInfo.getSearchActivity(), 0).loadLabel(pm).toString();
+				
 			} catch (NotFoundException e) {
 				e.printStackTrace();
 			} catch (NameNotFoundException e) {
 				e.printStackTrace();
 			}
 		
-		}
 		return null;
 	}
 
@@ -76,7 +72,7 @@ public class SuggestionOfSearchable implements ISuggestion {
 	 * @see com.epam.Suggestions.ISuggestion#getHint()
 	 */
 	public String getHint() {
-		int id = msInfo.getHintId();
+		int id = msInfo.getSettingsDescriptionId();
 		if (id != 0)
 		{
 			try {
@@ -175,6 +171,8 @@ public class SuggestionOfSearchable implements ISuggestion {
 		{
 			
 			uri = uri.buildUpon().appendPath( getParent().getQuery().toString()).build();
+			selectionArgs = null;
+			sortOrder = null;
 		}
 		Integer limit = getParent().getQueryLimmit();
 		if (limit != null)

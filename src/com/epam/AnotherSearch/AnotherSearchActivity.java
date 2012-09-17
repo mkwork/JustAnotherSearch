@@ -1,6 +1,10 @@
 package com.epam.AnotherSearch;
 
+import java.security.KeyStore.LoadStoreParameter;
+
 import android.app.Activity;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -15,7 +19,13 @@ public class AnotherSearchActivity extends Activity {
         setContentView(R.layout.main);
         mSearchAdapter = new SearchAdapter(this);
         ((ListView)findViewById(R.id.lvSearchResults)).setAdapter(mSearchAdapter);
-        ((EditText)findViewById(R.id.etSearch)).addTextChangedListener(new TextEditSearchEventslistener());
+        EditText searchView = ((EditText)findViewById(R.id.etSearch));
+        searchView.addTextChangedListener(new TextEditSearchEventslistener());
+        
+      /*  searchView.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.search_spin, 0);
+        Drawable drawable = searchView.getCompoundDrawables()[2];
+        android.graphics.drawable.Animatable animation = (android.graphics.drawable.Animatable)drawable; 
+        animation.start();*/
     
     }
     
