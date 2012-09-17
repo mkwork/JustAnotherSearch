@@ -4,9 +4,31 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <TextView
-        android:layout_width="fill_parent"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <EditText
+            android:id="@+id/etSearch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:hint="@string/search_hint"
+            android:singleLine="true" >
+
+            <requestFocus />
+        </EditText>
+
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/lvSearchResults"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/hello" />
+        android:layout_gravity="fill_horizontal"
+        android:layout_marginLeft="0dp" >
+
+    </ListView>
 
 </LinearLayout>
