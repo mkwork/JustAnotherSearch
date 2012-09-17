@@ -67,8 +67,10 @@ public class Suggestions implements ISuggestionEvents {
 	
 	public void reload()
 	{
+		setCanceled(false);
 		OnReloadStart();
 		for (ISuggestion suggestion : mSuggestions) {
+			if(isCanceled())break;
 			try
 			{
 				suggestion.select();
@@ -100,13 +102,26 @@ public class Suggestions implements ISuggestionEvents {
 	
 	public SearchManager getSearchManager()
 	{
-		return (SearchManager)getContext().getSystemService(Context.SEARCH_SERVICE);
+		if(getContext() != null)
+			return (SearchManager)getContext().getSystemService(Context.SEARCH_SERVICE);
+		return null;
 	}
 	
+	public Boolean isCanceled() {
+		return mIsCanceled;
+	}
+	public void setCanceled(Boolean mIsCanceled) {
+		this.mIsCanceled = mIsCanceled;
+	}
 	//Implementation
 	private void init()
 	{
-		mSearchables = getSearchManager().getSearchablesInGlobalSearch();
+		SearchManager sm =getSearchManager(); 
+		if (sm == null)
+		{
+			return;
+		}
+		mSearchables = sm.getSearchablesInGlobalSearch();
 		for (SearchableInfo info : mSearchables) {
 			mSuggestions.add(new SuggestionOfSearchable(this, info));
 		}
@@ -120,6 +135,7 @@ public class Suggestions implements ISuggestionEvents {
 		private List<ISuggestion> mSuggestions = new ArrayList<ISuggestion>();
 		private List<ISuggestionEvents> mEventsListeners = new ArrayList<ISuggestionEvents>();
 		private Context mContext;
+		private Boolean mIsCanceled = false;
 		
 	
 }

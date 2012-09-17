@@ -1,11 +1,13 @@
 package com.epam.AnotherSearch;
 
 import com.epam.Suggestions.ISuggestion;
+import com.epam.Suggestions.ISuggestionEvents;
 import com.epam.Suggestions.Suggestions;
 
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
@@ -19,22 +21,30 @@ public class SearchAdapter extends BaseAdapter {
 	public SearchAdapter(Context context)
 	{
 		super();
-		mSuggestions = new Suggestions(context);
+		mContext = context;
+		mTask = new SuggestionUpdateTask(this);
+		
+		
 	}
 	public void setQuery(CharSequence s)
 	{
+		mTask.cancel(false);
+		mTask = new SuggestionUpdateTask(this);
+		mTask.getSuggestions().setQuery(s);
+		mTask.execute();
 		
-		mSuggestions.setQuery(s);
-		mSuggestions.reload();
-		notifyDataSetChanged();
 	}
+	
 	public int getCount() {
-		if(mSuggestions.getQuery() == null || mSuggestions.getQuery().toString().isEmpty())
+		
+		Suggestions suggestions = mTask.getSuggestions(); 
+		if( suggestions == null || 
+				suggestions.getQuery() == null || suggestions.getQuery().toString().isEmpty())
 		{
 			return 0;
 		}
 		int count = 0;
-		for (ISuggestion suggestion : mSuggestions.getSuggestions()) {
+		for (ISuggestion suggestion : suggestions.getSuggestions()) {
 			if(suggestion.getCount() > 0)
 			{
 				count ++;
@@ -42,6 +52,7 @@ public class SearchAdapter extends BaseAdapter {
 			}
 		}
 		return count;
+		
 	}
 
 	public Object getItem(int arg0) {
@@ -130,7 +141,11 @@ public class SearchAdapter extends BaseAdapter {
 	{
 		int i = 0;
 	
-		for (ISuggestion suggestion : mSuggestions.getSuggestions()) {
+		if (mTask.getSuggestions() == null)
+		{
+			return null;
+		}
+		for (ISuggestion suggestion : mTask.getSuggestions().getSuggestions()) {
 			if(suggestion.getCount() <= 0)
 			{
 				 continue;
@@ -214,5 +229,64 @@ public class SearchAdapter extends BaseAdapter {
 		private String text;
 		
 	}
-	private Suggestions mSuggestions;
+	
+	private SuggestionUpdateTask mTask = null;
+	private Context mContext = null;
+
+	
+	private class SuggestionUpdateTask extends AsyncTask<Void, Void, Void> 
+	implements ISuggestionEvents
+	{
+
+		public SuggestionUpdateTask(SearchAdapter adapter)
+		{
+			mSearchAdapter = adapter;
+			mSuggestions = new Suggestions(mSearchAdapter.mContext);
+			
+		}
+			
+		public boolean OnReloadStart() {
+			publishProgress();
+			return false;
+		}
+
+		public boolean OnReloadFinished() {
+			publishProgress();
+			return false;
+		}
+
+		public boolean OnSuggestionLoaded(ISuggestion suggestion) {
+			
+			mSuggestions.setCanceled(isCancelled());
+			publishProgress();
+			return false;
+		}
+
+		@Override
+		protected void onProgressUpdate(Void... values) {
+			
+			super.onProgressUpdate(values);
+			mSearchAdapter.notifyDataSetInvalidated();
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) {
+			try
+			{
+				
+				mSuggestions.addSuggestionEventsListener(this);
+				mSuggestions.reload();
+				publishProgress();
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+		public Suggestions getSuggestions() {
+			return mSuggestions;
+		}
+		private SearchAdapter mSearchAdapter = null;
+		private Suggestions mSuggestions = null;
+	}
 }

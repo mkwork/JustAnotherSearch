@@ -22,7 +22,7 @@ public class AnotherSearchActivity extends Activity {
         EditText searchView = ((EditText)findViewById(R.id.etSearch));
         searchView.addTextChangedListener(new TextEditSearchEventslistener());
         
-      /*  searchView.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.search_spin, 0);
+       /* searchView.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.search_spin, 0);
         Drawable drawable = searchView.getCompoundDrawables()[2];
         android.graphics.drawable.Animatable animation = (android.graphics.drawable.Animatable)drawable; 
         animation.start();*/

@@ -1,6 +1,6 @@
 /**
  * @author Maxim_Kot
- *
+ * 
  */
 package com.epam.Suggestions;
 
