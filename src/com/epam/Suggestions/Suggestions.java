@@ -38,7 +38,12 @@ public class Suggestions implements ISuggestionEvents {
 		}
 		return false;
 	}
-	
+	public boolean OnSuggestionPreload(ISuggestion suggestion) {
+		for (ISuggestionEvents eventListener : mEventsListeners) {
+			eventListener.OnSuggestionPreload(suggestion);
+		}
+		return false;
+	}
 	public void addSuggestionEventsListener(ISuggestionEvents listener)
 	{
 		if(!mEventsListeners.contains(listener) && listener != this)
@@ -71,6 +76,7 @@ public class Suggestions implements ISuggestionEvents {
 		setCanceled(false);
 		OnReloadStart();
 		for (ISuggestion suggestion : mSuggestions) {
+			OnSuggestionPreload(suggestion);
 			if(isCanceled())break;
 			try
 			{
@@ -215,6 +221,7 @@ public class Suggestions implements ISuggestionEvents {
 		private List<ISuggestionEvents> mEventsListeners = new ArrayList<ISuggestionEvents>();
 		private Context mContext;
 		private Boolean mIsCanceled = false;
+		
 		
 	
 }

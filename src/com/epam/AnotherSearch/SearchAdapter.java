@@ -180,6 +180,7 @@ public class SearchAdapter extends BaseAdapter {
 	private class SuggestionUpdateTask extends AsyncTask<Void, Void, Void> 
 	implements ISuggestionEvents
 	{
+		
 
 		@Override
 		protected void onPostExecute(Void result) {
@@ -220,6 +221,11 @@ public class SearchAdapter extends BaseAdapter {
 			publishProgress();
 			return false;
 		}
+		public boolean OnSuggestionPreload(ISuggestion suggestion) {
+			mSuggestions.setCanceled(isCancelled());
+			publishProgress();
+			return false;
+		}
 
 		@Override
 		protected void onProgressUpdate(Void... values) {
@@ -247,5 +253,6 @@ public class SearchAdapter extends BaseAdapter {
 		}
 		private SearchAdapter mSearchAdapter = null;
 		private Suggestions mSuggestions = null;
+		
 	}
 }
