@@ -3,6 +3,7 @@ package com.epam.Suggestions;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import android.app.SearchManager;
 import android.app.SearchableInfo;
 import android.content.Context;
@@ -113,6 +114,49 @@ public class Suggestions implements ISuggestionEvents {
 	public void setCanceled(Boolean mIsCanceled) {
 		this.mIsCanceled = mIsCanceled;
 	}
+	
+	public SuggestionIndex findSuggestion(int pos)
+	{
+		int i = 0;
+			
+		for (ISuggestion suggestion : getSuggestions()) {
+			if(suggestion.getCount() <= 0)
+			{
+				 continue;
+	
+			}
+			if (i == pos || pos <= i + suggestion.getCount() )
+			{
+				Integer index = null;
+				if (i != pos)
+				{
+					index = i + suggestion.getCount() - pos;
+				}
+				SuggestionIndex sIndex = new SuggestionIndex(suggestion, index);
+				sIndex.setIsCategory(i == pos);
+								
+				return sIndex;
+			}
+			
+			i+= suggestion.getCount() + 1;
+			
+		}
+		return null;
+	}
+	
+	public int getCount() {
+		
+		int count = 0;
+		for (ISuggestion suggestion : this.getSuggestions()) {
+			if(suggestion.getCount() > 0)
+			{
+				count ++;
+				count += suggestion.getCount();
+			}
+		}
+		return count;
+		
+	}
 	//Implementation
 	private void init()
 	{
@@ -126,6 +170,41 @@ public class Suggestions implements ISuggestionEvents {
 			mSuggestions.add(new SuggestionOfSearchable(this, info));
 		}
 		//TODO: add extra sources here
+	}
+	
+	public class SuggestionIndex
+	{
+		private SuggestionIndex(ISuggestion suggestion, Integer index)
+		{
+			super();
+			setSuggestion(suggestion);
+			setIndex(index);
+		}
+		
+		public ISuggestion getSuggestion() {
+			return suggestion;
+		}
+		private void setSuggestion(ISuggestion suggestion) {
+			this.suggestion = suggestion;
+		}
+		public Integer getIndex() {
+			return index;
+		}
+		private void setIndex(Integer index) {
+			this.index = index;
+		}
+		
+		public Boolean isCategory() {
+			return isCategory;
+		}
+
+		private void setIsCategory(Boolean isCategory) {
+			this.isCategory = isCategory;
+		}
+
+		private ISuggestion suggestion = null;
+		private Integer index = null;
+		private Boolean isCategory = false;
 	}
 	
 		//Data
