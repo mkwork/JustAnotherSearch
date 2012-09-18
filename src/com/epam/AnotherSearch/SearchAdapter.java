@@ -6,9 +6,9 @@ import java.util.List;
 import com.epam.Suggestions.ISuggestion;
 import com.epam.Suggestions.ISuggestionEvents;
 import com.epam.Suggestions.Suggestions;
+import com.epam.Suggestions.Suggestions.SuggestionIndex;
 
 import android.content.Context;
-import android.database.Observable;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -50,15 +50,7 @@ public class SearchAdapter extends BaseAdapter {
 		{
 			return 0;
 		}
-		int count = 0;
-		for (ISuggestion suggestion : suggestions.getSuggestions()) {
-			if(suggestion.getCount() > 0)
-			{
-				count ++;
-				count += suggestion.getCount();
-			}
-		}
-		return count;
+		return suggestions.getCount();
 		
 	}
 
@@ -79,7 +71,7 @@ public class SearchAdapter extends BaseAdapter {
 		try
 		{
 			
-			SuggestionIndex index = findSuggestion(position);
+			SuggestionIndex index = mTask.getSuggestions().findSuggestion(position);
 			SuggestionData data = getSuggestionData(index);
 			layout = (LinearLayout)convertView;
 			
@@ -154,77 +146,12 @@ public class SearchAdapter extends BaseAdapter {
 		return data;
 	}
 	
-	private SuggestionIndex findSuggestion(int pos)
-	{
-		int i = 0;
 	
-		if (mTask.getSuggestions() == null)
-		{
-			return null;
-		}
-		for (ISuggestion suggestion : mTask.getSuggestions().getSuggestions()) {
-			if(suggestion.getCount() <= 0)
-			{
-				 continue;
-				 
-			}
-			if (i == pos || pos <= i + suggestion.getCount() )
-			{
-				Integer index = null;
-				if (i != pos)
-				{
-					index = i + suggestion.getCount() - pos;
-				}
-				SuggestionIndex sIndex = new SuggestionIndex(suggestion, index);
-				sIndex.setIsCategory(i == pos);
-								
-				return sIndex;
-			}
-			
-			i+= suggestion.getCount() + 1;
-			
-		}
-		return null;
-	}
 	
 	//Data
 	private SuggestionUpdateTask mTask = null;
 	private Context mContext = null;
 	private List<ISearchProcessListener> mSearchProcessListeners = new ArrayList<ISearchProcessListener>();
-	private class SuggestionIndex
-	{
-		public SuggestionIndex(ISuggestion suggestion, Integer index)
-		{
-			super();
-			setSuggestion(suggestion);
-			setIndex(index);
-		}
-		
-		public ISuggestion getSuggestion() {
-			return suggestion;
-		}
-		public void setSuggestion(ISuggestion suggestion) {
-			this.suggestion = suggestion;
-		}
-		public Integer getIndex() {
-			return index;
-		}
-		public void setIndex(Integer index) {
-			this.index = index;
-		}
-		
-		private Boolean isCategory() {
-			return isCategory;
-		}
-
-		private void setIsCategory(Boolean isCategory) {
-			this.isCategory = isCategory;
-		}
-
-		private ISuggestion suggestion = null;
-		private Integer index = null;
-		private Boolean isCategory = false;
-	}
 	
 	private class SuggestionData
 	{
@@ -249,10 +176,6 @@ public class SearchAdapter extends BaseAdapter {
 		private String text;
 		
 	}
-	
-	
-	
-
 	
 	private class SuggestionUpdateTask extends AsyncTask<Void, Void, Void> 
 	implements ISuggestionEvents
