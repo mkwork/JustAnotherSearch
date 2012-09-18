@@ -67,7 +67,7 @@ public class SuggestionOfSearchable implements ISuggestion {
 		
 		return null;
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see com.epam.Suggestions.ISuggestion#getHint()
 	 */
@@ -158,7 +158,7 @@ public class SuggestionOfSearchable implements ISuggestion {
 	 */
 	public void select() {
 		
-				
+						
 		String selection = msInfo.getSuggestSelection();
 		String[] selectionArgs = 
 				{
@@ -187,7 +187,6 @@ public class SuggestionOfSearchable implements ISuggestion {
 					selectionArgs, 
 					sortOrder);
 		
-
 	}
 
 	//Implementation
@@ -277,9 +276,6 @@ public class SuggestionOfSearchable implements ISuggestion {
 	Cursor mCursor = null;
 	Suggestions mParent;
 	SearchableInfo msInfo;
-	public boolean isLoaded() {
-		// TODO Auto-generated method stub
-		return false;
-	}
+		
 
 }

@@ -32,26 +32,25 @@ public class SearchAdapter extends BaseAdapter {
 	}
 	public void setQuery(CharSequence s)
 	{
+		
 		mTask.cancel(false);
 		mTask = new SuggestionUpdateTask(this);
 		mTask.getSuggestions().setQuery(s);
 		for (ISearchProcessListener listener : mSearchProcessListeners) {
 			listener.onSearchStarted();
 		}
-		mTask.execute();
+		mCount = 0;
+		notifyDataSetChanged();
+		if (s.length() > 0)
+		{
+			mTask.execute();
+		}
 		
 	}
 	
 	public int getCount() {
-		
-		Suggestions suggestions = mTask.getSuggestions(); 
-		if( suggestions == null || 
-				suggestions.getQuery() == null || suggestions.getQuery().toString().isEmpty())
-		{
-			return 0;
-		}
-		return suggestions.getCount();
-		
+				
+		return mCount;
 	}
 
 	public Object getItem(int arg0) {
@@ -71,44 +70,51 @@ public class SearchAdapter extends BaseAdapter {
 		try
 		{
 			
-			SuggestionIndex index = mTask.getSuggestions().findSuggestion(position);
-			SuggestionData data = getSuggestionData(index);
-			layout = (LinearLayout)convertView;
+		
+							
+				SuggestionIndex index = mTask.getSuggestions().findSuggestion(position);
+				if (index == null)
+				{
+					index = mTask.getSuggestions().findSuggestion(position);
+				}
+				SuggestionData data = getSuggestionData(index);
+				layout = (LinearLayout)convertView;
+				
+				if(layout == null)
+				{
+					layout = new LinearLayout(parent.getContext());
+					
+					LinearLayout.LayoutParams textViewParams = 
+		        			new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
+		        	LinearLayout.LayoutParams imageViewParams = 
+		        			new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
+		        	        	
+		        	textViewParams.weight = 0.80f;
+		        	imageViewParams.weight = 0.20f;
+		        	
+					textView = new TextView(parent.getContext());
+					iconView = new ImageView(parent.getContext());
+									iconView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+					layout.addView(textView, textViewParams);
+					layout.addView(iconView, imageViewParams);
+					
+				}
+				else
+				{
+					textView = (TextView)layout.getChildAt(0);
+					iconView = (ImageView)layout.getChildAt(1);
+				}
+				textView.setText(data.getText());
+				iconView.setImageDrawable(data.getIcon());
+				if(index.isCategory())
+				{
+					layout.setBackgroundColor(Color.GRAY);
+				}
+				else
+				{
+					layout.setBackgroundColor(layout.getDrawingCacheBackgroundColor());				
+				}
 			
-			if(layout == null)
-			{
-				layout = new LinearLayout(parent.getContext());
-				
-				LinearLayout.LayoutParams textViewParams = 
-	        			new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
-	        	LinearLayout.LayoutParams imageViewParams = 
-	        			new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
-	        	        	
-	        	textViewParams.weight = 0.80f;
-	        	imageViewParams.weight = 0.20f;
-	        	
-				textView = new TextView(parent.getContext());
-				iconView = new ImageView(parent.getContext());
-								iconView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-				layout.addView(textView, textViewParams);
-				layout.addView(iconView, imageViewParams);
-				
-			}
-			else
-			{
-				textView = (TextView)layout.getChildAt(0);
-				iconView = (ImageView)layout.getChildAt(1);
-			}
-			textView.setText(data.getText());
-			iconView.setImageDrawable(data.getIcon());
-			if(index.isCategory())
-			{
-				layout.setBackgroundColor(Color.GRAY);
-			}
-			else
-			{
-				layout.setBackgroundColor(layout.getDrawingCacheBackgroundColor());				
-			}
 		}catch (Exception e) {
 			e.printStackTrace();
 			
@@ -151,7 +157,9 @@ public class SearchAdapter extends BaseAdapter {
 	//Data
 	private SuggestionUpdateTask mTask = null;
 	private Context mContext = null;
-	private List<ISearchProcessListener> mSearchProcessListeners = new ArrayList<ISearchProcessListener>();
+	private List<ISearchProcessListener> mSearchProcessListeners = 
+			new ArrayList<ISearchProcessListener>();
+	private int mCount = 0;
 	
 	private class SuggestionData
 	{
@@ -188,6 +196,7 @@ public class SearchAdapter extends BaseAdapter {
 				listener.onSearchFinished();
 			}
 			super.onPostExecute(result);
+			publishProgress();
 		}
 
 		@Override
@@ -196,6 +205,7 @@ public class SearchAdapter extends BaseAdapter {
 				listener.onSearchStarted();
 			}
 			super.onPreExecute();
+			ProgressAndCancelIfCanceled();
 		}
 
 		public SuggestionUpdateTask(SearchAdapter adapter)
@@ -206,24 +216,22 @@ public class SearchAdapter extends BaseAdapter {
 		}
 			
 		public boolean OnReloadStart() {
-			publishProgress();
+			ProgressAndCancelIfCanceled();
 			return false;
 		}
 
 		public boolean OnReloadFinished() {
-			publishProgress();
+			ProgressAndCancelIfCanceled();
 			return false;
 		}
 
 		public boolean OnSuggestionLoaded(ISuggestion suggestion) {
 			
-			mSuggestions.setCanceled(isCancelled());
-			publishProgress();
+			ProgressAndCancelIfCanceled();
 			return false;
 		}
 		public boolean OnSuggestionPreload(ISuggestion suggestion) {
-			mSuggestions.setCanceled(isCancelled());
-			publishProgress();
+			ProgressAndCancelIfCanceled();
 			return false;
 		}
 
@@ -231,6 +239,18 @@ public class SearchAdapter extends BaseAdapter {
 		protected void onProgressUpdate(Void... values) {
 			
 			super.onProgressUpdate(values);
+			if(!isCancelled())
+			{
+				synchronized (mSuggestions) {
+					mSearchAdapter.mCount = mSuggestions.getCount();	
+				}
+				
+				
+			}
+			else
+			{
+				mSearchAdapter.mCount = 0;
+			}
 			mSearchAdapter.notifyDataSetInvalidated();
 		}
 
@@ -238,10 +258,10 @@ public class SearchAdapter extends BaseAdapter {
 		protected Void doInBackground(Void... params) {
 			try
 			{
-				
+				ProgressAndCancelIfCanceled();
 				mSuggestions.addSuggestionEventsListener(this);
 				mSuggestions.reload();
-				publishProgress();
+				ProgressAndCancelIfCanceled();
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -250,6 +270,17 @@ public class SearchAdapter extends BaseAdapter {
 		}
 		public Suggestions getSuggestions() {
 			return mSuggestions;
+		}
+		
+		private void ProgressAndCancelIfCanceled()
+		{
+			mSuggestions.setCanceled(isCancelled());
+			if(isCancelled())
+			{
+				mSuggestions.removeSuggestionEventsListener(this);
+				onPostExecute(null);
+			}
+		    publishProgress();
 		}
 		private SearchAdapter mSearchAdapter = null;
 		private Suggestions mSuggestions = null;

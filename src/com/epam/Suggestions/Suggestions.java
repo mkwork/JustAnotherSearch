@@ -154,7 +154,7 @@ public class Suggestions implements ISuggestionEvents {
 		
 		int count = 0;
 		for (ISuggestion suggestion : this.getSuggestions()) {
-			if(suggestion.getCount() > 0)
+			if(suggestion.getCount() > 0 )
 			{
 				count ++;
 				count += suggestion.getCount();
@@ -221,7 +221,7 @@ public class Suggestions implements ISuggestionEvents {
 		private List<ISuggestionEvents> mEventsListeners = new ArrayList<ISuggestionEvents>();
 		private Context mContext;
 		private Boolean mIsCanceled = false;
-		
+				
 		
 	
 }
