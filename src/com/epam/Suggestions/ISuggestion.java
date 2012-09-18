@@ -63,4 +63,9 @@ SearchableInfo getSearchable();
  */
 void select();
 
+/**
+ * @return true if data of this suggestion can be taken into account
+ */
+boolean isLoaded();
+
 }

@@ -277,5 +277,9 @@ public class SuggestionOfSearchable implements ISuggestion {
 	Cursor mCursor = null;
 	Suggestions mParent;
 	SearchableInfo msInfo;
+	public boolean isLoaded() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 }
