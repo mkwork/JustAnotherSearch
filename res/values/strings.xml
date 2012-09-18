@@ -5,5 +5,6 @@
     <string name="app_name">AnotherSearch</string>
     <string name="search_button">Find</string>
     <string name="search_hint">Input yours search request</string>
+    <string name="search_settings_menu_item">Search settings</string>
 
 </resources>
