@@ -32,7 +32,7 @@ public class Settings implements ISuggestionsSettings {
 		String suggestionPackage = info.getSuggestPackage();
 		String suggestionAuthority = info.getSuggestAuthority();
 		String suggestionPath= info.getSuggestPath();
-		return suggestionPackage + ":" + suggestionAuthority  + ":" + suggestionPath; 
+		return suggestionPackage + "." + suggestionAuthority  + "." + suggestionPath; 
 	}
 
 }
