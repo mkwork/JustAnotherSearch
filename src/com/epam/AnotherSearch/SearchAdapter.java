@@ -212,6 +212,7 @@ public class SearchAdapter extends BaseAdapter {
 		{
 			mSearchAdapter = adapter;
 			mSuggestions = new Suggestions(mSearchAdapter.mContext);
+			mSuggestions.setSettings(new Settings());
 			
 		}
 			
