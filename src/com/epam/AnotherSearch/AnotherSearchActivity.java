@@ -1,6 +1,7 @@
 package com.epam.AnotherSearch;
 
 import com.epam.Suggestions.SuggestionLauncher;
+import com.epam.Suggestions.Suggestions;
 import com.epam.Suggestions.Suggestions.SuggestionIndex;
 
 import android.app.Activity;
@@ -44,6 +45,8 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        this.getSystemService(SEARCH_SERVICE);
+        getContentResolver();
         mSearchAdapter = new SearchAdapter(this);
         ListView listView = ((ListView)findViewById(R.id.lvSearchResults)); 
         listView.setAdapter(mSearchAdapter);

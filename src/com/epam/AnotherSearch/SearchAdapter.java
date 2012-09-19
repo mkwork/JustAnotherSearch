@@ -27,24 +27,33 @@ public class SearchAdapter extends BaseAdapter {
 	{
 		super();
 		mContext = context;
-		mTask = new SuggestionUpdateTask(this);
+		mTask = null;
 		
 		
 	}
 	public void setQuery(CharSequence s)
 	{
 		
-		mTask.cancel(false);
+		if (mTask != null)
+		{
+			mTask.cancel(false);
+		}
 		mTask = new SuggestionUpdateTask(this);
-		mTask.getSuggestions().setQuery(s);
 		mCount = 0;
 		notifyDataSetChanged();
 		if (s.length() > 0)
 		{
+			mTask.setQuery(s.toString());
 			for (ISearchProcessListener listener : mSearchProcessListeners) {
 				listener.onSearchStarted();
 			}
 			mTask.execute();
+		}
+		else
+		{
+			for (ISearchProcessListener listener : mSearchProcessListeners) {
+				listener.onSearchFinished();
+			}
 		}
 		
 	}
@@ -237,9 +246,7 @@ public class SearchAdapter extends BaseAdapter {
 		public SuggestionUpdateTask(SearchAdapter adapter)
 		{
 			mSearchAdapter = adapter;
-			mSuggestions = new Suggestions(mSearchAdapter.mContext);
-			mSuggestions.setSettings(new Settings());
-			
+			mSuggestions = new Suggestions(mSearchAdapter.mContext);			
 		}
 			
 		public boolean OnReloadStart() {
@@ -286,6 +293,9 @@ public class SearchAdapter extends BaseAdapter {
 			try
 			{
 				ProgressAndCancelIfCanceled();
+				mSuggestions.setQuery(getQuery());
+				mSuggestions.setSettings(new Settings());
+				mSuggestions.setQueryLimmit(50);
 				mSuggestions.addSuggestionEventsListener(this);
 				mSuggestions.reload();
 				ProgressAndCancelIfCanceled();
@@ -309,8 +319,16 @@ public class SearchAdapter extends BaseAdapter {
 			}
 		    publishProgress();
 		}
+		public String getQuery() {
+			return mQuery;
+		}
+
+		public void setQuery(String mQuery) {
+			this.mQuery = mQuery;
+		}
 		private SearchAdapter mSearchAdapter = null;
 		private Suggestions mSuggestions = null;
+		private String mQuery = null;
 		
 	}
 }
