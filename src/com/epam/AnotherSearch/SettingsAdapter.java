@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -17,6 +19,7 @@ public class SettingsAdapter extends BaseAdapter {
 
 	public SettingsAdapter(Context context) {
 		mSuggestions = new Suggestions(context);
+		mSuggestions.setSettings(new Settings());
 	}
 	
 	public int getCount() {
@@ -34,7 +37,7 @@ public class SettingsAdapter extends BaseAdapter {
 	}
 
 	public View getView(int position, View convertView, ViewGroup parent) {
-		ISuggestion suggestion = mSuggestions.getSuggestions().get(position);
+		final ISuggestion suggestion = mSuggestions.getSuggestions().get(position);
 		LinearLayout layout = (LinearLayout)convertView;
 		TextView textView = null;
 		ImageView imageView = null;
@@ -45,7 +48,18 @@ public class SettingsAdapter extends BaseAdapter {
 			textView = new TextView(parent.getContext());
 			imageView = new ImageView(parent.getContext());
 			checkBox = new CheckBox(parent.getContext());
-			checkBox.setChecked(position % 2 > 0 ? true : false);
+			checkBox.setOnCheckedChangeListener(new OnCheckedChangeListener()
+			{
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+			    {
+			    	try
+					{
+						mSuggestions.getSettings().swithcSuggestrionOn(suggestion, isChecked);
+					}catch (NullPointerException e) {
+						throw new IllegalStateException("Suggestions settings must not be null, see Suggestions.setSettings(ISuggestionsSettings)");
+					}
+			    }
+			});
 			LinearLayout.LayoutParams params = 
 					new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT);
 			params.weight = 10;
@@ -54,6 +68,7 @@ public class SettingsAdapter extends BaseAdapter {
 			layout.addView(textView, params);
 			params.weight = 10;
 			layout.addView(checkBox, params);
+			
 			
 		}
 		else
@@ -65,7 +80,12 @@ public class SettingsAdapter extends BaseAdapter {
 		
 		textView.setText(suggestion.getText());
 		imageView.setImageDrawable(suggestion.getIcon());
-		
+		try
+		{
+			checkBox.setChecked(mSuggestions.getSettings().isSuggestionOn(suggestion));
+		}catch (NullPointerException e) {
+			throw new IllegalStateException("Suggestions settings must not be null, see Suggestions.setSettings(ISuggestionsSettings)");
+		}
 		return layout;
 	}
 

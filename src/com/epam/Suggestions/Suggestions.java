@@ -66,6 +66,12 @@ public class Suggestions implements ISuggestionEvents {
 		this.mQuery = s;
 	}
 	
+	public ISuggestionsSettings getSettings() {
+		return mSettings;
+	}
+	public void setSettings(ISuggestionsSettings mSettings) {
+		this.mSettings = mSettings;
+	}
 	public List<ISuggestion> getSuggestions()
 	{
 		return mSuggestions;
@@ -76,6 +82,10 @@ public class Suggestions implements ISuggestionEvents {
 		setCanceled(false);
 		OnReloadStart();
 		for (ISuggestion suggestion : mSuggestions) {
+			if(!useSuggestion(suggestion))
+			{
+				continue;
+			}
 			OnSuggestionPreload(suggestion);
 			if(isCanceled())break;
 			try
@@ -126,7 +136,7 @@ public class Suggestions implements ISuggestionEvents {
 		int i = 0;
 			
 		for (ISuggestion suggestion : getSuggestions()) {
-			if(suggestion.getCount() <= 0)
+			if(suggestion.getCount() <= 0 || !useSuggestion(suggestion))
 			{
 				 continue;
 	
@@ -154,7 +164,7 @@ public class Suggestions implements ISuggestionEvents {
 		
 		int count = 0;
 		for (ISuggestion suggestion : this.getSuggestions()) {
-			if(suggestion.getCount() > 0 )
+			if(suggestion.getCount() > 0 && useSuggestion(suggestion))
 			{
 				count ++;
 				count += suggestion.getCount();
@@ -163,6 +173,7 @@ public class Suggestions implements ISuggestionEvents {
 		return count;
 		
 	}
+	
 	//Implementation
 	private void init()
 	{
@@ -176,6 +187,14 @@ public class Suggestions implements ISuggestionEvents {
 			mSuggestions.add(new SuggestionOfSearchable(this, info));
 		}
 		//TODO: add extra sources here
+	}
+	private boolean useSuggestion(ISuggestion suggestion)
+	{
+		if (getSettings() == null)
+		{
+			return true;
+		}
+		return getSettings().isSuggestionOn(suggestion);
 	}
 	
 	public class SuggestionIndex
@@ -221,6 +240,7 @@ public class Suggestions implements ISuggestionEvents {
 		private List<ISuggestionEvents> mEventsListeners = new ArrayList<ISuggestionEvents>();
 		private Context mContext;
 		private Boolean mIsCanceled = false;
+		private ISuggestionsSettings mSettings = null;
 				
 		
 	
