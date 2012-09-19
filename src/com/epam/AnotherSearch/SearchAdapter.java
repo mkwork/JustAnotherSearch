@@ -36,13 +36,13 @@ public class SearchAdapter extends BaseAdapter {
 		mTask.cancel(false);
 		mTask = new SuggestionUpdateTask(this);
 		mTask.getSuggestions().setQuery(s);
-		for (ISearchProcessListener listener : mSearchProcessListeners) {
-			listener.onSearchStarted();
-		}
 		mCount = 0;
 		notifyDataSetChanged();
 		if (s.length() > 0)
 		{
+			for (ISearchProcessListener listener : mSearchProcessListeners) {
+				listener.onSearchStarted();
+			}
 			mTask.execute();
 		}
 		
