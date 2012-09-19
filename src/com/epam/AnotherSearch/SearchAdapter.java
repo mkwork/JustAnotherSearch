@@ -48,18 +48,27 @@ public class SearchAdapter extends BaseAdapter {
 		
 	}
 	
+	@Override
+	public boolean areAllItemsEnabled() {
+		return false;
+	}
+	@Override
+	public boolean isEnabled(int position) {
+		
+		return !mTask.getSuggestions().findSuggestion(position).isCategory();
+	}
 	public int getCount() {
 				
 		return mCount;
 	}
 
-	public Object getItem(int arg0) {
-		// TODO Auto-generated method stub
-		return null;
+	public Object getItem(int position) {
+		
+		return mTask.getSuggestions().findSuggestion(position);
 	}
 
 	public long getItemId(int pos) {
-		// TODO Auto-generated method stub
+		
 		return pos;
 	}
 

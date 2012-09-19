@@ -6,5 +6,7 @@
     <string name="search_button">Find</string>
     <string name="search_hint">Input yours search request</string>
     <string name="search_settings_menu_item">Search settings</string>
+    <string name="some_uncauched_error">Some uncauched error has been occured</string>
+    <string name="suggestion_not_launchable">This suggestion has no way to be opened</string>
 
 </resources>

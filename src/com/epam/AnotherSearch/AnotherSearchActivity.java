@@ -1,5 +1,8 @@
 package com.epam.AnotherSearch;
 
+import com.epam.Suggestions.SuggestionLauncher;
+import com.epam.Suggestions.Suggestions.SuggestionIndex;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -9,8 +12,12 @@ import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 public class AnotherSearchActivity extends Activity implements ISearchProcessListener{
     @Override
@@ -38,7 +45,28 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         mSearchAdapter = new SearchAdapter(this);
-        ((ListView)findViewById(R.id.lvSearchResults)).setAdapter(mSearchAdapter);
+        ListView listView = ((ListView)findViewById(R.id.lvSearchResults)); 
+        listView.setAdapter(mSearchAdapter);
+        listView.setOnItemClickListener(new OnItemClickListener() {
+
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				SuggestionIndex index = (SuggestionIndex)parent.getAdapter().getItem(position);
+				if (index != null)
+				{
+					if (!SuggestionLauncher.launch(index))
+					{
+						Toast.makeText(parent.getContext(),
+								parent.getContext().getResources().getText(R.string.suggestion_not_launchable) , 200).show();
+					}
+				}
+				else
+				{
+					Toast.makeText(parent.getContext(),
+							parent.getContext().getResources().getText(R.string.some_uncauched_error) , 200).show();
+				}
+			}
+		});
         EditText searchView = ((EditText)findViewById(R.id.etSearch));
         searchView.addTextChangedListener(new TextEditSearchEventslistener());
         mSearchAdapter.addSearchProcessListener(this);
