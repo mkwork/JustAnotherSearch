@@ -12,6 +12,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
@@ -94,18 +95,29 @@ public class SearchAdapter extends BaseAdapter {
 					layout = new LinearLayout(parent.getContext());
 					
 					LinearLayout.LayoutParams textViewParams = 
-		        			new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
-		        	LinearLayout.LayoutParams imageViewParams = 
-		        			new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
+		        			new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT);
+		        	
 		        	        	
-		        	textViewParams.weight = 0.80f;
-		        	imageViewParams.weight = 0.20f;
+		        	textViewParams.weight = 80f;
+		        	
 		        	
 					textView = new TextView(parent.getContext());
 					iconView = new ImageView(parent.getContext());
-									iconView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+									iconView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+					iconView.setAdjustViewBounds(true);
+					
+					textView.setTextSize(TypedValue.COMPLEX_UNIT_FRACTION_PARENT, 25);
+					
+					int textSize = (int)textView.getTextSize();
+					
+					LinearLayout.LayoutParams imageViewParams = 
+		        			new LinearLayout.LayoutParams(textSize * 2, textSize * 2);
+										
+					
 					layout.addView(textView, textViewParams);
 					layout.addView(iconView, imageViewParams);
+					
+					
 					
 				}
 				else
@@ -155,7 +167,12 @@ public class SearchAdapter extends BaseAdapter {
 		}
 		else
 		{
-			data.setIcon(index.getSuggestion().getIcon(index.getIndex()));
+			Drawable icon = index.getSuggestion().getIcon(index.getIndex());
+			if (icon == null)
+			{
+				icon = index.getSuggestion().getIcon();
+			}
+			data.setIcon(icon);
 			data.setText(index.getSuggestion().getText(index.getIndex()));
 		}
 		return data;
