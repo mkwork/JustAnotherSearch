@@ -29,3 +29,4 @@ local.properties
 /gen
 /gen/com/epam/AnotherSearch/BuildConfig.java
 /gen/com/epam/AnotherSearch/R.java
+/lint.xml
