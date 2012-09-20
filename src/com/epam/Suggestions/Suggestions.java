@@ -16,8 +16,7 @@ public class Suggestions implements ISuggestionEvents {
 	{
 		super();
 		mContext = context;
-		init();
-		
+				
 	}
 	//Events
 	public boolean OnReloadStart() {
@@ -74,11 +73,15 @@ public class Suggestions implements ISuggestionEvents {
 	}
 	public List<ISuggestion> getSuggestions()
 	{
+		init();
 		return mSuggestions;
 	}
 	
 	public void reload()
 	{
+		
+		init();
+		
 		setCanceled(false);
 		OnReloadStart();
 		for (ISuggestion suggestion : mSuggestions) {
@@ -177,6 +180,10 @@ public class Suggestions implements ISuggestionEvents {
 	//Implementation
 	private void init()
 	{
+		if(mInitialized)
+		{
+			return;
+		}
 		SearchManager sm =getSearchManager(); 
 		if (sm == null)
 		{
@@ -187,6 +194,7 @@ public class Suggestions implements ISuggestionEvents {
 			mSuggestions.add(new SuggestionOfSearchable(this, info));
 		}
 		//TODO: add extra sources here
+		mInitialized = true;
 	}
 	private boolean useSuggestion(ISuggestion suggestion)
 	{
@@ -241,6 +249,7 @@ public class Suggestions implements ISuggestionEvents {
 		private Context mContext;
 		private Boolean mIsCanceled = false;
 		private ISuggestionsSettings mSettings = null;
+		private Boolean mInitialized = false;
 				
 		
 	
