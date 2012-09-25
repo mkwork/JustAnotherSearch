@@ -12,9 +12,12 @@
          partition. -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+    <uses-permission android:name="android.permission.READ_MEMO" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_MMS" />
     <uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
+    
+    
 
     <!-- Permissions used by GoogleSearch. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

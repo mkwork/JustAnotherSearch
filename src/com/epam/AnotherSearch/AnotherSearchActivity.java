@@ -1,7 +1,6 @@
 package com.epam.AnotherSearch;
 
 import com.epam.Suggestions.SuggestionLauncher;
-import com.epam.Suggestions.Suggestions;
 import com.epam.Suggestions.Suggestions.SuggestionIndex;
 
 import android.app.Activity;
@@ -60,13 +59,13 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
 					if (!SuggestionLauncher.launch(index))
 					{
 						Toast.makeText(parent.getContext(),
-								parent.getContext().getResources().getText(R.string.suggestion_not_launchable) , 200).show();
+								parent.getContext().getResources().getText(R.string.suggestion_not_launchable) , Toast.LENGTH_SHORT).show();
 					}
 				}
 				else
 				{
 					Toast.makeText(parent.getContext(),
-							parent.getContext().getResources().getText(R.string.some_uncauched_error) , 200).show();
+							parent.getContext().getResources().getText(R.string.some_uncauched_error) , Toast.LENGTH_SHORT).show();
 				}
 			}
 		});

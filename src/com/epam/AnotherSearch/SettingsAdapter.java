@@ -19,7 +19,7 @@ public class SettingsAdapter extends BaseAdapter {
 
 	public SettingsAdapter(Context context) {
 		mSuggestions = new Suggestions(context);
-		mSuggestions.setSettings(new Settings());
+	//	mSuggestions.setSettings(new Settings());
 	}
 	
 	public int getCount() {
@@ -74,17 +74,17 @@ public class SettingsAdapter extends BaseAdapter {
 		    {
 		    	try
 				{
-					mSuggestions.getSettings().swithcSuggestrionOn(suggestion, isChecked);
+//					mSuggestions.getSettings().swithcProviderOn(suggestion, isChecked);
 				}catch (NullPointerException e) {
-					throw new IllegalStateException("Suggestions settings must not be null, see Suggestions.setSettings(ISuggestionsSettings)");
+					throw new IllegalStateException("Suggestions settings must not be null, see Suggestions.setSettings(SearchSettings)");
 				}
 		    }
 		});
 		try
 		{
-			checkBox.setChecked(mSuggestions.getSettings().isSuggestionOn(suggestion));
+	//		checkBox.setChecked(mSuggestions.getSettings().isProviderOn(suggestion));
 		}catch (NullPointerException e) {
-			throw new IllegalStateException("Suggestions settings must not be null, see Suggestions.setSettings(ISuggestionsSettings)");
+			throw new IllegalStateException("Suggestions settings must not be null, see Suggestions.setSettings(SearchSettings)");
 		}
 		return layout;
 	}

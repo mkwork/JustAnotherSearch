@@ -3,15 +3,10 @@ package com.epam.AnotherSearch;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.epam.Suggestions.ISuggestion;
-import com.epam.Suggestions.ISuggestionEvents;
-import com.epam.Suggestions.Suggestions;
-import com.epam.Suggestions.Suggestions.SuggestionIndex;
-
-import android.content.Context;
+import android.app.Activity;
+import android.database.DataSetObserver;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,40 +16,86 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.epam.search.Search;
+import com.epam.search.Search.SearchIndex;
+import com.epam.search.searchable.SearchableProvidersPack;
+import com.epam.search.util.IconObtainer;
+
 public class SearchAdapter extends BaseAdapter {
 
-	public SearchAdapter(Context context)
+	public SearchAdapter(Activity activity)
 	{
 		super();
-		mContext = context;
-		mTask = null;
+		mActivity = activity;
+		final Activity a = activity;
+		final SearchAdapter adapter = this;
+		mSearch = new Search();
+		mSearch.addProvidersPack(new SearchableProvidersPack(activity));
+		mSearch.registerDataSetObserver(new DataSetObserver() {
+
+			@Override
+			public void onChanged() {
+				// TODO Auto-generated method stub
+				super.onChanged();
+				a.runOnUiThread(new Runnable() {
+					
+					public void run() {
+						synchronized (adapter) {
+							mCount = mSearch.getCount();
+							adapter.notifyDataSetChanged();
+						}
+						
+					}
+				});
+			}
+			
+		});
 		
+		mSearch.setSearchEndListener(new Runnable() {
+			
+			public void run() {
+				a.runOnUiThread(new Runnable() {
+					
+					public void run() {
+						for (ISearchProcessListener listener : adapter.mSearchProcessListeners) {
+							listener.onSearchFinished();
+						}
+						synchronized (adapter) {
+							mCount = mSearch.getCount();
+							adapter.notifyDataSetChanged();
+						}
+						
+						
+					}
+				});
+				
+			}
+		});
+		
+		mSearch.setSearchStartListener(new Runnable() {
+			
+			public void run() {
+				a.runOnUiThread(new Runnable() {
+					
+					public void run() {
+						for (ISearchProcessListener listener : adapter.mSearchProcessListeners) {
+							listener.onSearchStarted();
+						}
+						synchronized (adapter) {
+							mCount = mSearch.getCount();
+							adapter.notifyDataSetChanged();
+							
+						}
+					}
+				});
+				
+			}
+		});
 		
 	}
 	public void setQuery(CharSequence s)
 	{
-		
-		if (mTask != null)
-		{
-			mTask.cancel(false);
-		}
-		mTask = new SuggestionUpdateTask(this);
-		mCount = 0;
-		notifyDataSetChanged();
-		if (s.length() > 0)
-		{
-			mTask.setQuery(s.toString());
-			for (ISearchProcessListener listener : mSearchProcessListeners) {
-				listener.onSearchStarted();
-			}
-			mTask.execute();
-		}
-		else
-		{
-			for (ISearchProcessListener listener : mSearchProcessListeners) {
-				listener.onSearchFinished();
-			}
-		}
+		mSearch.search(s.toString(), 10);
 		
 	}
 	
@@ -65,7 +106,9 @@ public class SearchAdapter extends BaseAdapter {
 	@Override
 	public boolean isEnabled(int position) {
 		
-		return !mTask.getSuggestions().findSuggestion(position).isCategory();
+		if(mSearch.getAt(position) != null)
+			return mSearch.getAt(position).isCategory();
+		else return false;
 	}
 	public int getCount() {
 				
@@ -74,7 +117,7 @@ public class SearchAdapter extends BaseAdapter {
 
 	public Object getItem(int position) {
 		
-		return mTask.getSuggestions().findSuggestion(position);
+		return mSearch.getAt(position);
 	}
 
 	public long getItemId(int pos) {
@@ -88,15 +131,14 @@ public class SearchAdapter extends BaseAdapter {
 		ImageView iconView = null;
 		try
 		{
-			
-		
-							
-				SuggestionIndex index = mTask.getSuggestions().findSuggestion(position);
+										
+				SearchIndex index = mSearch.getAt(position);
 				if (index == null)
 				{
-					index = mTask.getSuggestions().findSuggestion(position);
+					index = mSearch.getAt(position);
 				}
-				SuggestionData data = getSuggestionData(index);
+				
+				
 				layout = (LinearLayout)convertView;
 				
 				if(layout == null)
@@ -134,16 +176,32 @@ public class SearchAdapter extends BaseAdapter {
 					textView = (TextView)layout.getChildAt(0);
 					iconView = (ImageView)layout.getChildAt(1);
 				}
-				textView.setText(data.getText());
-				iconView.setImageDrawable(data.getIcon());
+				
+				String text = null;
+				Drawable icon = null;
+				
 				if(index.isCategory())
 				{
 					layout.setBackgroundColor(Color.GRAY);
+					text = index.getSuggestionProvider().getName();
+					if(index.getSuggestionProvider().getHint() != null)
+					{
+						text += "\n" + index.getSuggestionProvider().getHint();
+					}
+					IconObtainer obtainer = index.getSuggestionProvider().getIcon();
+					obtainer.load();
+					icon = obtainer.getLoaded();
 				}
 				else
 				{
-					layout.setBackgroundColor(layout.getDrawingCacheBackgroundColor());				
+					layout.setBackgroundColor(layout.getDrawingCacheBackgroundColor());
+					text = index.getSuggestion().getText1();
+					IconObtainer obtainer = index.getSuggestion().getIcon1();
+					obtainer.load();
+					icon = obtainer.getLoaded();
 				}
+				textView.setText(text);
+				iconView.setImageDrawable(icon);
 			
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -164,171 +222,18 @@ public class SearchAdapter extends BaseAdapter {
 	}
 	//Implementation
 		
-	
-	private SuggestionData getSuggestionData(SuggestionIndex index)
-	{
-		
-		SuggestionData data = new SuggestionData(null, null);
-		if (index.isCategory()){
-			data.setIcon(index.getSuggestion().getIcon());
-			data.setText(index.getSuggestion().getText() + (  
-			index.getSuggestion().getHint() != null ?  "\n" + index.getSuggestion().getHint() : "") );
-		}
-		else
-		{
-			Drawable icon = index.getSuggestion().getIcon(index.getIndex());
-			if (icon == null)
-			{
-				icon = index.getSuggestion().getIcon();
+	/*
+	 * for (ISearchProcessListener listener : mSearchProcessListeners) {
+				listener.onSearchFinished();
 			}
-			data.setIcon(icon);
-			data.setText(index.getSuggestion().getText(index.getIndex()));
-		}
-		return data;
-	}
-	
+	 * */
 	
 	
 	//Data
-	private SuggestionUpdateTask mTask = null;
-	private Context mContext = null;
+	private Activity mActivity = null;
 	private List<ISearchProcessListener> mSearchProcessListeners = 
 			new ArrayList<ISearchProcessListener>();
+			
+	private Search mSearch = null;
 	private int mCount = 0;
-	
-	private class SuggestionData
-	{
-		public SuggestionData(String text,Drawable icon)
-		{
-			setIcon(icon);
-			setText(text);
-		}
-		public Drawable getIcon() {
-			return icon;
-		}
-		public void setIcon(Drawable icon) {
-			this.icon = icon;
-		}
-		public String getText() {
-			return text;
-		}
-		public void setText(String text) {
-			this.text = text;
-		}
-		private Drawable icon;
-		private String text;
-		
-	}
-	
-	private class SuggestionUpdateTask extends AsyncTask<Void, Void, Void> 
-	implements ISuggestionEvents
-	{
-		
-
-		@Override
-		protected void onPostExecute(Void result) {
-			for (ISearchProcessListener listener : mSearchProcessListeners) {
-				listener.onSearchFinished();
-			}
-			super.onPostExecute(result);
-			publishProgress();
-		}
-
-		@Override
-		protected void onPreExecute() {
-			for (ISearchProcessListener listener : mSearchProcessListeners) {
-				listener.onSearchStarted();
-			}
-			super.onPreExecute();
-			ProgressAndCancelIfCanceled();
-		}
-
-		public SuggestionUpdateTask(SearchAdapter adapter)
-		{
-			mSearchAdapter = adapter;
-			mSuggestions = new Suggestions(mSearchAdapter.mContext);			
-		}
-			
-		public boolean OnReloadStart() {
-			ProgressAndCancelIfCanceled();
-			return false;
-		}
-
-		public boolean OnReloadFinished() {
-			ProgressAndCancelIfCanceled();
-			return false;
-		}
-
-		public boolean OnSuggestionLoaded(ISuggestion suggestion) {
-			
-			ProgressAndCancelIfCanceled();
-			return false;
-		}
-		public boolean OnSuggestionPreload(ISuggestion suggestion) {
-			ProgressAndCancelIfCanceled();
-			return false;
-		}
-
-		@Override
-		protected void onProgressUpdate(Void... values) {
-			
-			super.onProgressUpdate(values);
-			if(!isCancelled())
-			{
-				synchronized (mSuggestions) {
-					mSearchAdapter.mCount = mSuggestions.getCount();	
-				}
-				
-				
-			}
-			else
-			{
-				mSearchAdapter.mCount = 0;
-			}
-			mSearchAdapter.notifyDataSetInvalidated();
-		}
-
-		@Override
-		protected Void doInBackground(Void... params) {
-			try
-			{
-				ProgressAndCancelIfCanceled();
-				mSuggestions.setQuery(getQuery());
-				mSuggestions.setSettings(new Settings());
-				mSuggestions.setQueryLimmit(50);
-				mSuggestions.addSuggestionEventsListener(this);
-				mSuggestions.reload();
-				ProgressAndCancelIfCanceled();
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			return null;
-		}
-		public Suggestions getSuggestions() {
-			return mSuggestions;
-		}
-		
-		private void ProgressAndCancelIfCanceled()
-		{
-			mSuggestions.setCanceled(isCancelled());
-			if(isCancelled())
-			{
-				mSuggestions.removeSuggestionEventsListener(this);
-				onPostExecute(null);
-			}
-		    publishProgress();
-		}
-		public String getQuery() {
-			return mQuery;
-		}
-
-		public void setQuery(String mQuery) {
-			this.mQuery = mQuery;
-		}
-		private SearchAdapter mSearchAdapter = null;
-		private Suggestions mSuggestions = null;
-		private String mQuery = null;
-		
-	}
 }
