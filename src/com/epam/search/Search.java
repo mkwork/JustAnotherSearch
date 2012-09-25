@@ -83,9 +83,9 @@ public class Search implements SearchWorkerProcessListener{
 				}
 				
 				count += suggestions.getCount();
-				if(getSplitByCategories())
+				if(!getSplitByCategories())
 				{
-					count++;
+					count--;
 				}
 				
 			}
@@ -137,9 +137,9 @@ public class Search implements SearchWorkerProcessListener{
 				}
 						
 				i += suggestions.getCount();
-				if(!getSplitByCategories())
+				if(getSplitByCategories())
 				{
-					i--;
+					i++;
 				}
 				
 			}

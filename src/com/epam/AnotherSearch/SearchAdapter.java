@@ -30,6 +30,7 @@ public class SearchAdapter extends BaseAdapter {
 		final Activity a = activity;
 		final SearchAdapter adapter = this;
 		mSearch = new Search();
+		mSearch.setSplitByCategories(true);
 		mSearch.addProvidersPack(new SearchableProvidersPack(activity));
 		mSearch.registerDataSetObserver(new DataSetObserver() {
 
@@ -41,7 +42,7 @@ public class SearchAdapter extends BaseAdapter {
 					
 					public void run() {
 						synchronized (adapter) {
-							mCount = mSearch.getCount();
+							syncSearch();
 							adapter.notifyDataSetChanged();
 						}
 						
@@ -61,7 +62,7 @@ public class SearchAdapter extends BaseAdapter {
 							listener.onSearchFinished();
 						}
 						synchronized (adapter) {
-							mCount = mSearch.getCount();
+							syncSearch();
 							adapter.notifyDataSetChanged();
 						}
 						
@@ -82,7 +83,7 @@ public class SearchAdapter extends BaseAdapter {
 							listener.onSearchStarted();
 						}
 						synchronized (adapter) {
-							mCount = mSearch.getCount();
+							syncSearch();
 							adapter.notifyDataSetChanged();
 							
 						}
@@ -95,7 +96,15 @@ public class SearchAdapter extends BaseAdapter {
 	}
 	public void setQuery(CharSequence s)
 	{
-		mSearch.search(s.toString(), 10);
+		if(s.length() > 0)
+		{
+			mSearch.search(s.toString(), 0);
+		}
+		else
+		{
+			mCount = 0;
+			notifyDataSetChanged();
+		}
 		
 	}
 	
@@ -106,9 +115,7 @@ public class SearchAdapter extends BaseAdapter {
 	@Override
 	public boolean isEnabled(int position) {
 		
-		if(mSearch.getAt(position) != null)
-			return mSearch.getAt(position).isCategory();
-		else return false;
+		return !mSuggestions.get(position).isCategory();
 	}
 	public int getCount() {
 				
@@ -117,7 +124,7 @@ public class SearchAdapter extends BaseAdapter {
 
 	public Object getItem(int position) {
 		
-		return mSearch.getAt(position);
+		return mSuggestions.get(position);
 	}
 
 	public long getItemId(int pos) {
@@ -132,12 +139,8 @@ public class SearchAdapter extends BaseAdapter {
 		try
 		{
 										
-				SearchIndex index = mSearch.getAt(position);
-				if (index == null)
-				{
-					index = mSearch.getAt(position);
-				}
-				
+				SearchIndex index = (SearchIndex)this.getItem(position);
+								
 				
 				layout = (LinearLayout)convertView;
 				
@@ -220,14 +223,18 @@ public class SearchAdapter extends BaseAdapter {
 	{
 		mSearchProcessListeners.remove(listener);
 	}
-	//Implementation
-		
-	/*
-	 * for (ISearchProcessListener listener : mSearchProcessListeners) {
-				listener.onSearchFinished();
-			}
-	 * */
 	
+	
+	private void syncSearch()
+	{
+		List<SearchIndex> suggestions = new ArrayList<Search.SearchIndex>();
+		for(int i = 0; i < mSearch.getCount(); i++)
+		{
+			suggestions.add(mSearch.getAt(i));
+		}
+		mSuggestions = suggestions;
+		mCount = mSuggestions.size();
+	}
 	
 	//Data
 	private Activity mActivity = null;
@@ -235,5 +242,6 @@ public class SearchAdapter extends BaseAdapter {
 			new ArrayList<ISearchProcessListener>();
 			
 	private Search mSearch = null;
+	private List<SearchIndex> mSuggestions = new ArrayList<Search.SearchIndex>();
 	private int mCount = 0;
 }
