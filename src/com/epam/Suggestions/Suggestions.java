@@ -3,6 +3,8 @@ package com.epam.Suggestions;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.epam.search.SearchSettings;
+
 
 import android.app.SearchManager;
 import android.app.SearchableInfo;
@@ -65,10 +67,10 @@ public class Suggestions implements ISuggestionEvents {
 		this.mQuery = s;
 	}
 	
-	public ISuggestionsSettings getSettings() {
+	public SearchSettings getSettings() {
 		return mSettings;
 	}
-	public void setSettings(ISuggestionsSettings mSettings) {
+	public void setSettings(SearchSettings mSettings) {
 		this.mSettings = mSettings;
 	}
 	public List<ISuggestion> getSuggestions()
@@ -202,7 +204,7 @@ public class Suggestions implements ISuggestionEvents {
 		{
 			return true;
 		}
-		return getSettings().isSuggestionOn(suggestion);
+		return false;//getSettings().isProviderOn(suggestion);
 	}
 	
 	public class SuggestionIndex
@@ -248,7 +250,7 @@ public class Suggestions implements ISuggestionEvents {
 		private List<ISuggestionEvents> mEventsListeners = new ArrayList<ISuggestionEvents>();
 		private Context mContext;
 		private Boolean mIsCanceled = false;
-		private ISuggestionsSettings mSettings = null;
+		private SearchSettings mSettings = null;
 		private Boolean mInitialized = false;
 				
 		

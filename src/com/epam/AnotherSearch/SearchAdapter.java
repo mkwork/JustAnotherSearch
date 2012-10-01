@@ -3,15 +3,12 @@ package com.epam.AnotherSearch;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.epam.Suggestions.ISuggestion;
-import com.epam.Suggestions.ISuggestionEvents;
-import com.epam.Suggestions.Suggestions;
-import com.epam.Suggestions.Suggestions.SuggestionIndex;
-
-import android.content.Context;
+import android.app.Activity;
+import android.content.res.Resources;
+import android.database.DataSetObserver;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,41 +18,104 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.epam.AnotherSearch.R.drawable;
+import com.epam.search.Search;
+import com.epam.search.Search.SearchIndex;
+import com.epam.search.searchable.SearchableProvidersPack;
+import com.epam.search.util.IconObtainer;
+
 public class SearchAdapter extends BaseAdapter {
 
-	public SearchAdapter(Context context)
+	public SearchAdapter(Activity activity)
 	{
 		super();
-		mContext = context;
-		mTask = null;
+		mActivity = activity;
+		final Activity a = activity;
+		final SearchAdapter adapter = this;
+		mPlaceholder = activity.getApplication().getResources().getDrawable(android.R.drawable.presence_busy);
+		mSearch = new Search();
+		mSearch.setSplitByCategories(true);
+		mSearch.addProvidersPack(new SearchableProvidersPack(activity));
+		mSearch.registerDataSetObserver(new DataSetObserver() {
+
+			@Override
+			public void onChanged() {
+				// TODO Auto-generated method stub
+				super.onChanged();
+				a.runOnUiThread(new Runnable() {
+					
+					public void run() {
+						synchronized (adapter) {
+							syncSearch();
+							adapter.notifyDataSetChanged();
+						}
+						
+					}
+				});
+			}
+			
+		});
 		
+		mSearch.setSearchEndListener(new Runnable() {
+			
+			public void run() {
+				a.runOnUiThread(new Runnable() {
+					
+					public void run() {
+						for (ISearchProcessListener listener : adapter.mSearchProcessListeners) {
+							listener.onSearchFinished();
+						}
+						synchronized (adapter) {
+							syncSearch();
+							adapter.notifyDataSetChanged();
+						}
+						
+						
+					}
+				});
+				
+			}
+		});
+		
+		mSearch.setSearchStartListener(new Runnable() {
+			
+			public void run() {
+				a.runOnUiThread(new Runnable() {
+					
+					public void run() {
+						for (ISearchProcessListener listener : adapter.mSearchProcessListeners) {
+							listener.onSearchStarted();
+						}
+						synchronized (adapter) {
+							syncSearch();
+							adapter.notifyDataSetChanged();
+							
+						}
+					}
+				});
+				
+			}
+		});
 		
 	}
 	public void setQuery(CharSequence s)
 	{
-		
-		if (mTask != null)
+		clear();
+		if(s.length() > 0)
 		{
-			mTask.cancel(false);
+			mSearch.search(s.toString(), 0);
 		}
-		mTask = new SuggestionUpdateTask(this);
+		
+		
+	}
+	public void clear() {
+		mSuggestions.clear();
 		mCount = 0;
+		mSearch.cancel();
+		for (ISearchProcessListener listener : mSearchProcessListeners) {
+			listener.onSearchFinished();
+		}
 		notifyDataSetChanged();
-		if (s.length() > 0)
-		{
-			mTask.setQuery(s.toString());
-			for (ISearchProcessListener listener : mSearchProcessListeners) {
-				listener.onSearchStarted();
-			}
-			mTask.execute();
-		}
-		else
-		{
-			for (ISearchProcessListener listener : mSearchProcessListeners) {
-				listener.onSearchFinished();
-			}
-		}
-		
 	}
 	
 	@Override
@@ -65,7 +125,7 @@ public class SearchAdapter extends BaseAdapter {
 	@Override
 	public boolean isEnabled(int position) {
 		
-		return !mTask.getSuggestions().findSuggestion(position).isCategory();
+		return !mSuggestions.get(position).isCategory();
 	}
 	public int getCount() {
 				
@@ -74,7 +134,7 @@ public class SearchAdapter extends BaseAdapter {
 
 	public Object getItem(int position) {
 		
-		return mTask.getSuggestions().findSuggestion(position);
+		return mSuggestions.get(position);
 	}
 
 	public long getItemId(int pos) {
@@ -88,15 +148,10 @@ public class SearchAdapter extends BaseAdapter {
 		ImageView iconView = null;
 		try
 		{
-			
-		
-							
-				SuggestionIndex index = mTask.getSuggestions().findSuggestion(position);
-				if (index == null)
-				{
-					index = mTask.getSuggestions().findSuggestion(position);
-				}
-				SuggestionData data = getSuggestionData(index);
+										
+				SearchIndex index = (SearchIndex)this.getItem(position);
+								
+				
 				layout = (LinearLayout)convertView;
 				
 				if(layout == null)
@@ -134,16 +189,54 @@ public class SearchAdapter extends BaseAdapter {
 					textView = (TextView)layout.getChildAt(0);
 					iconView = (ImageView)layout.getChildAt(1);
 				}
-				textView.setText(data.getText());
-				iconView.setImageDrawable(data.getIcon());
+				
+				String text = null;
+				Drawable icon = null;
+				IconObtainer obtainer = null;
 				if(index.isCategory())
 				{
 					layout.setBackgroundColor(Color.GRAY);
+					text = index.getSuggestionProvider().getName();
+					if(index.getSuggestionProvider().getHint() != null)
+					{
+						text += "\n" + index.getSuggestionProvider().getHint();
+					}
+					obtainer = index.getSuggestionProvider().getIcon();
+										
 				}
 				else
 				{
-					layout.setBackgroundColor(layout.getDrawingCacheBackgroundColor());				
+					layout.setBackgroundColor(layout.getDrawingCacheBackgroundColor());
+					text = index.getSuggestion().getText1();
+					obtainer = index.getSuggestion().getIcon1();
+					
 				}
+				textView.setText(text);
+				
+				if(obtainer != null)
+				{
+						final ImageView updatingImageView = iconView;
+						final IconObtainer updatingObtainer = obtainer;
+						final Activity updatingActivity = mActivity;
+						obtainer.setIconReadyListener(new Runnable() {
+							
+							public void run() {
+								updatingActivity.runOnUiThread(new Runnable() {
+									
+									public void run() {
+										updatingImageView.setImageDrawable(updatingObtainer.getIcon(mPlaceholder));
+										notifyDataSetChanged();
+									}
+								});
+								
+								
+							}
+						});
+						icon = obtainer.getIcon(null);
+						iconView.setImageDrawable(icon);
+					
+				}
+				
 			
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -162,173 +255,25 @@ public class SearchAdapter extends BaseAdapter {
 	{
 		mSearchProcessListeners.remove(listener);
 	}
-	//Implementation
-		
 	
-	private SuggestionData getSuggestionData(SuggestionIndex index)
+	
+	private void syncSearch()
 	{
-		
-		SuggestionData data = new SuggestionData(null, null);
-		if (index.isCategory()){
-			data.setIcon(index.getSuggestion().getIcon());
-			data.setText(index.getSuggestion().getText() + (  
-			index.getSuggestion().getHint() != null ?  "\n" + index.getSuggestion().getHint() : "") );
-		}
-		else
+		List<SearchIndex> suggestions = new ArrayList<Search.SearchIndex>();
+		for(int i = 0; i < mSearch.getCount(); i++)
 		{
-			Drawable icon = index.getSuggestion().getIcon(index.getIndex());
-			if (icon == null)
-			{
-				icon = index.getSuggestion().getIcon();
-			}
-			data.setIcon(icon);
-			data.setText(index.getSuggestion().getText(index.getIndex()));
+			suggestions.add(mSearch.getAt(i));
 		}
-		return data;
+		mSuggestions = suggestions;
+		mCount = mSuggestions.size();
 	}
-	
-	
 	
 	//Data
-	private SuggestionUpdateTask mTask = null;
-	private Context mContext = null;
 	private List<ISearchProcessListener> mSearchProcessListeners = 
 			new ArrayList<ISearchProcessListener>();
+	private Activity mActivity = null;		
+	private Search mSearch = null;
+	private List<SearchIndex> mSuggestions = new ArrayList<Search.SearchIndex>();
 	private int mCount = 0;
-	
-	private class SuggestionData
-	{
-		public SuggestionData(String text,Drawable icon)
-		{
-			setIcon(icon);
-			setText(text);
-		}
-		public Drawable getIcon() {
-			return icon;
-		}
-		public void setIcon(Drawable icon) {
-			this.icon = icon;
-		}
-		public String getText() {
-			return text;
-		}
-		public void setText(String text) {
-			this.text = text;
-		}
-		private Drawable icon;
-		private String text;
-		
-	}
-	
-	private class SuggestionUpdateTask extends AsyncTask<Void, Void, Void> 
-	implements ISuggestionEvents
-	{
-		
-
-		@Override
-		protected void onPostExecute(Void result) {
-			for (ISearchProcessListener listener : mSearchProcessListeners) {
-				listener.onSearchFinished();
-			}
-			super.onPostExecute(result);
-			publishProgress();
-		}
-
-		@Override
-		protected void onPreExecute() {
-			for (ISearchProcessListener listener : mSearchProcessListeners) {
-				listener.onSearchStarted();
-			}
-			super.onPreExecute();
-			ProgressAndCancelIfCanceled();
-		}
-
-		public SuggestionUpdateTask(SearchAdapter adapter)
-		{
-			mSearchAdapter = adapter;
-			mSuggestions = new Suggestions(mSearchAdapter.mContext);			
-		}
-			
-		public boolean OnReloadStart() {
-			ProgressAndCancelIfCanceled();
-			return false;
-		}
-
-		public boolean OnReloadFinished() {
-			ProgressAndCancelIfCanceled();
-			return false;
-		}
-
-		public boolean OnSuggestionLoaded(ISuggestion suggestion) {
-			
-			ProgressAndCancelIfCanceled();
-			return false;
-		}
-		public boolean OnSuggestionPreload(ISuggestion suggestion) {
-			ProgressAndCancelIfCanceled();
-			return false;
-		}
-
-		@Override
-		protected void onProgressUpdate(Void... values) {
-			
-			super.onProgressUpdate(values);
-			if(!isCancelled())
-			{
-				synchronized (mSuggestions) {
-					mSearchAdapter.mCount = mSuggestions.getCount();	
-				}
-				
-				
-			}
-			else
-			{
-				mSearchAdapter.mCount = 0;
-			}
-			mSearchAdapter.notifyDataSetInvalidated();
-		}
-
-		@Override
-		protected Void doInBackground(Void... params) {
-			try
-			{
-				ProgressAndCancelIfCanceled();
-				mSuggestions.setQuery(getQuery());
-				mSuggestions.setSettings(new Settings());
-				mSuggestions.setQueryLimmit(50);
-				mSuggestions.addSuggestionEventsListener(this);
-				mSuggestions.reload();
-				ProgressAndCancelIfCanceled();
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			return null;
-		}
-		public Suggestions getSuggestions() {
-			return mSuggestions;
-		}
-		
-		private void ProgressAndCancelIfCanceled()
-		{
-			mSuggestions.setCanceled(isCancelled());
-			if(isCancelled())
-			{
-				mSuggestions.removeSuggestionEventsListener(this);
-				onPostExecute(null);
-			}
-		    publishProgress();
-		}
-		public String getQuery() {
-			return mQuery;
-		}
-
-		public void setQuery(String mQuery) {
-			this.mQuery = mQuery;
-		}
-		private SearchAdapter mSearchAdapter = null;
-		private Suggestions mSuggestions = null;
-		private String mQuery = null;
-		
-	}
+	private Drawable mPlaceholder = null;
 }
