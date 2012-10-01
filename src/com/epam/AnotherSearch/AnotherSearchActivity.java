@@ -1,8 +1,5 @@
 package com.epam.AnotherSearch;
 
-import com.epam.Suggestions.SuggestionLauncher;
-import com.epam.Suggestions.Suggestions;
-import com.epam.Suggestions.Suggestions.SuggestionIndex;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -19,6 +16,9 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import com.epam.search.Search.SearchIndex;
+import com.epam.search.data.Suggestion;
 
 public class AnotherSearchActivity extends Activity implements ISearchProcessListener{
     @Override
@@ -54,19 +54,33 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
 
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				SuggestionIndex index = (SuggestionIndex)parent.getAdapter().getItem(position);
+				SearchIndex index = (SearchIndex)parent.getAdapter().getItem(position);
 				if (index != null)
 				{
-					if (!SuggestionLauncher.launch(index))
+					Suggestion suggestion = index.getSuggestion();
+					if(suggestion == null)
 					{
 						Toast.makeText(parent.getContext(),
-								parent.getContext().getResources().getText(R.string.suggestion_not_launchable) , 200).show();
+								parent.getContext().getResources().getText(R.string.suggestion_not_launchable) , Toast.LENGTH_SHORT).show();
 					}
+					else
+					{
+						Runnable suggestionLauncher = suggestion.getLauncher();
+						try {
+							suggestionLauncher.run();
+						} catch (Exception e) {
+							Toast.makeText(parent.getContext(),
+									parent.getContext().getResources().getText(R.string.suggestion_not_launchable) , Toast.LENGTH_SHORT).show();
+							e.printStackTrace();
+						}
+					}
+					
+					
 				}
 				else
 				{
 					Toast.makeText(parent.getContext(),
-							parent.getContext().getResources().getText(R.string.some_uncauched_error) , 200).show();
+							parent.getContext().getResources().getText(R.string.some_uncauched_error) , Toast.LENGTH_SHORT).show();
 				}
 			}
 		});

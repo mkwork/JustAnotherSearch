@@ -4,7 +4,7 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk android:minSdkVersion="10" />
+    <uses-sdk android:minSdkVersion="8" />
     
     <uses-permission android:name="android.permission.GLOBAL_SEARCH" />
 	  <!-- Permissions needed by the default corpora. We request these instead of just relying on
@@ -12,9 +12,12 @@
          partition. -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+    <uses-permission android:name="android.permission.READ_MEMO" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_MMS" />
     <uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
+    
+    
 
     <!-- Permissions used by GoogleSearch. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
