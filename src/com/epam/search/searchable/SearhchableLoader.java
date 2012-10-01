@@ -8,9 +8,9 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.epam.search.data.Suggestions;
-import com.epam.search.util.Loadable;
+import com.epam.search.util.NotifiedLoadable;
 
-class SearhchableLoader implements Loadable<Suggestions> {
+class SearhchableLoader implements NotifiedLoadable<Suggestions> {
 
 	public SearhchableLoader(SearchableProvider provider, String query, int limit)
 	{
@@ -34,7 +34,7 @@ class SearhchableLoader implements Loadable<Suggestions> {
 				return;
 			}
 			
-			SearchableInfo sInfo = mSearchableProvider.getSearchInfo(); 
+			SearchableInfo sInfo = mSearchableProvider.getSearchableInfo(); 
 			String selection = sInfo.getSuggestSelection();
 			String[] selectionArgs = 
 					{
@@ -95,13 +95,13 @@ class SearhchableLoader implements Loadable<Suggestions> {
 	}
 
 	public void setOnLoadStartListener(
-			com.epam.search.util.Loadable.OnLoadStartListener listener) {
+			com.epam.search.util.NotifiedLoadable.OnLoadStartListener listener) {
 		mStartListener = listener;
 		
 	}
 
 	public void setOnLoadFinishedListener(
-			com.epam.search.util.Loadable.OnLoadFinishedListener listener) {
+			com.epam.search.util.NotifiedLoadable.OnLoadFinishedListener listener) {
 		mFinishListener = listener;
 		
 	}
@@ -138,11 +138,13 @@ class SearhchableLoader implements Loadable<Suggestions> {
 	       Uri uri = uriBuilder.build();
 	        return uri;
 	    }
-	com.epam.search.util.Loadable.OnLoadStartListener mStartListener = null;
-	com.epam.search.util.Loadable.OnLoadFinishedListener mFinishListener = null;
+	com.epam.search.util.NotifiedLoadable.OnLoadStartListener mStartListener = null;
+	com.epam.search.util.NotifiedLoadable.OnLoadFinishedListener mFinishListener = null;
 	Suggestions mSuggestions = null;
 	SearchableProvider mSearchableProvider = null;
 	String mQuery = null;
 	int mLimit = -1;
+	
+	
  
 }

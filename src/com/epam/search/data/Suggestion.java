@@ -5,6 +5,7 @@ import com.epam.search.util.IconObtainer;
 public interface Suggestion {
 	
 	Suggestions getSuggestions();
+	Runnable getLauncher();
 	
 	String getFormat();
 	IconObtainer getIcon1();

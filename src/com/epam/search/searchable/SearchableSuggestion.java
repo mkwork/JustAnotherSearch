@@ -1,7 +1,10 @@
 package com.epam.search.searchable;
 
 import android.app.SearchManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 
 import com.epam.search.data.Suggestion;
 import com.epam.search.data.Suggestions;
@@ -21,13 +24,22 @@ class SearchableSuggestion implements Suggestion {
 	}
 
 	public IconObtainer getIcon1() {
-		return new SearchableSuggestionIconObtainer(
-				obtainCursorValue(SearchManager.SUGGEST_COLUMN_ICON_1));
+		if(mIcon1 == null)
+		{
+			 mIcon1 = new IconObtainer(getContext(), obtainCursorValue(SearchManager.SUGGEST_COLUMN_ICON_1)
+						, getResourceOwner());
+		}
+		return mIcon1;
+				
 	}
 
 	public IconObtainer getIcon2() {
-		return new SearchableSuggestionIconObtainer(
-				obtainCursorValue(SearchManager.SUGGEST_COLUMN_ICON_2));
+		if(mIcon2 == null)
+		{
+			 mIcon2 = new IconObtainer(getContext(), obtainCursorValue(SearchManager.SUGGEST_COLUMN_ICON_2)
+						, getResourceOwner());
+		}
+		return mIcon2;
 	}
 
 	public String getIntentAction() {
@@ -105,7 +117,56 @@ class SearchableSuggestion implements Suggestion {
 		}
 		
 	}
+
+	private Context getContext()
+	{
+		return ((SearchableProvider)getSuggestions().getProvider()).getContext();
+	}
+	
+	private ComponentName getResourceOwner()
+	{
+		return ((SearchableProvider)getSuggestions().getProvider()).
+				getSearchableInfo().getSearchActivity();
+	}
+	
+	public Runnable getLauncher() {
+		
+		return new Runnable() {
+			
+			public void run() {
+				String action = getIntentAction();
+				String data = getIntentData();
+				String extra = 	getIntentExtraData();	
+				if(action == null)
+				{
+					return ;
+				}
+				
+				android.content.Intent intent = new android.content.Intent(action);
+				if(data  != null)
+				{
+					intent.setData(Uri.parse(data));
+				}
+				
+				if (extra != null)
+				{
+					intent.putExtra(SearchManager.EXTRA_DATA_KEY, extra);
+				}
+				
+				SearchableProvider provider = (SearchableProvider)getSuggestions().getProvider();
+				if(provider != null)
+				{
+					intent.setComponent(provider.getSearchableInfo().getSearchActivity());
+					provider.getContext().startActivity(intent);
+				}
+								
+			}
+		};
+	}
 	
 	private int mPosition = -1;
 	private SearchableSuggestions mSuggestions = null;
+	IconObtainer mIcon1 = null;
+	IconObtainer mIcon2 = null;
+	
 }

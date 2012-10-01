@@ -1,4 +1,7 @@
 package com.epam.search.searchable;
+import java.util.HashMap;
+import java.util.Map;
+
 import android.database.Cursor;
 
 import com.epam.search.data.Suggestion;
@@ -25,8 +28,16 @@ class SearchableSuggestions implements Suggestions{
 	}
 
 	public Suggestion get(int i) {
-		
-		return new SearchableSuggestion(i, this);
+		if(i < 0 || i >= getCount())
+		{
+			return null;
+		}
+		if(mSuggestionsCache.containsKey(i))
+		{
+			return mSuggestionsCache.get(i);
+		}
+		mSuggestionsCache.put(i, new SearchableSuggestion(i, this));
+		return mSuggestionsCache.get(i);
 	}
 	
 	private Cursor mCursor = null;
@@ -36,4 +47,5 @@ class SearchableSuggestions implements Suggestions{
 		return mProvider;
 	}
 
+	private Map<Integer, Suggestion> mSuggestionsCache = new HashMap<Integer, Suggestion>();
 }

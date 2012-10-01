@@ -102,7 +102,12 @@ public class SearchAdapter extends BaseAdapter {
 		}
 		else
 		{
+			mSuggestions.clear();
 			mCount = 0;
+			mSearch.cancel();
+			for (ISearchProcessListener listener : mSearchProcessListeners) {
+				listener.onSearchFinished();
+			}
 			notifyDataSetChanged();
 		}
 		
@@ -182,7 +187,7 @@ public class SearchAdapter extends BaseAdapter {
 				
 				String text = null;
 				Drawable icon = null;
-				
+				IconObtainer obtainer = null;
 				if(index.isCategory())
 				{
 					layout.setBackgroundColor(Color.GRAY);
@@ -191,20 +196,42 @@ public class SearchAdapter extends BaseAdapter {
 					{
 						text += "\n" + index.getSuggestionProvider().getHint();
 					}
-					IconObtainer obtainer = index.getSuggestionProvider().getIcon();
-					obtainer.load();
-					icon = obtainer.getLoaded();
+					obtainer = index.getSuggestionProvider().getIcon();
+										
 				}
 				else
 				{
 					layout.setBackgroundColor(layout.getDrawingCacheBackgroundColor());
 					text = index.getSuggestion().getText1();
-					IconObtainer obtainer = index.getSuggestion().getIcon1();
-					obtainer.load();
-					icon = obtainer.getLoaded();
+					obtainer = index.getSuggestion().getIcon1();
+					
 				}
 				textView.setText(text);
-				iconView.setImageDrawable(icon);
+				
+				if(obtainer != null)
+				{
+						final ImageView updatingImageView = iconView;
+						final IconObtainer updatingObtainer = obtainer;
+						final Activity updatingActivity = mActivity;
+						obtainer.setIconReadyListener(new Runnable() {
+							
+							public void run() {
+								updatingActivity.runOnUiThread(new Runnable() {
+									
+									public void run() {
+										updatingImageView.setImageDrawable(updatingObtainer.getIcon(mPlaceholder));
+										
+									}
+								});
+								
+								
+							}
+						});
+						icon = obtainer.getIcon(null);
+						iconView.setImageDrawable(icon);
+					
+				}
+				
 			
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -237,11 +264,11 @@ public class SearchAdapter extends BaseAdapter {
 	}
 	
 	//Data
-	private Activity mActivity = null;
 	private List<ISearchProcessListener> mSearchProcessListeners = 
 			new ArrayList<ISearchProcessListener>();
-			
+	private Activity mActivity = null;		
 	private Search mSearch = null;
 	private List<SearchIndex> mSuggestions = new ArrayList<Search.SearchIndex>();
 	private int mCount = 0;
+	private Drawable mPlaceholder = null;
 }

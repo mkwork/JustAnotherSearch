@@ -1,7 +1,7 @@
 package com.epam.search.data;
 
 import com.epam.search.util.IconObtainer;
-import com.epam.search.util.Loadable;
+import com.epam.search.util.NotifiedLoadable;
 
 public interface SuggestionProvider {
 	
@@ -14,5 +14,5 @@ public interface SuggestionProvider {
 	String getDefaultIntentAction();
 	String getDefaultIntentData();
 	
-	Loadable<Suggestions> getSuggestionsLoader(String query, int maxResults);
+	NotifiedLoadable<Suggestions> getSuggestionsLoader(String query, int maxResults);
 }
