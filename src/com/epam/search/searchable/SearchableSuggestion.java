@@ -1,6 +1,7 @@
 package com.epam.search.searchable;
 
 import android.app.SearchManager;
+import android.app.SearchableInfo;
 import android.content.ComponentName;
 import android.content.Context;
 import android.database.Cursor;
@@ -43,12 +44,22 @@ class SearchableSuggestion implements Suggestion {
 	}
 
 	public String getIntentAction() {
-		return obtainCursorValue(SearchManager.SUGGEST_COLUMN_INTENT_ACTION);
+		String action = obtainCursorValue(SearchManager.SUGGEST_COLUMN_INTENT_ACTION);
+		if(action == null)
+		{
+			action = getSearchableProvider().getSearchableInfo().getSuggestIntentAction();
+		}
+		return action;
 	}
 
 	public String getIntentData() {
 	
-		return obtainCursorValue(SearchManager.SUGGEST_COLUMN_INTENT_DATA);
+		String data = obtainCursorValue(SearchManager.SUGGEST_COLUMN_INTENT_DATA);
+		if(data == null)
+		{
+			data = getSearchableProvider().getSearchableInfo().getSuggestIntentData();
+		}
+		return data;
 	}
 
 	public String getIntentDataID() {
@@ -164,6 +175,10 @@ class SearchableSuggestion implements Suggestion {
 		};
 	}
 	
+	private SearchableProvider getSearchableProvider()
+	{
+		return (SearchableProvider)getSuggestions().getProvider();
+	}
 	private int mPosition = -1;
 	private SearchableSuggestions mSuggestions = null;
 	IconObtainer mIcon1 = null;

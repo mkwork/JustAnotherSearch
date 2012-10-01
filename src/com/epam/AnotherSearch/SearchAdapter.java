@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.res.Resources;
 import android.database.DataSetObserver;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.TypedValue;
 import android.view.View;
@@ -16,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.epam.AnotherSearch.R.drawable;
 import com.epam.search.Search;
 import com.epam.search.Search.SearchIndex;
 import com.epam.search.searchable.SearchableProvidersPack;
@@ -29,6 +32,7 @@ public class SearchAdapter extends BaseAdapter {
 		mActivity = activity;
 		final Activity a = activity;
 		final SearchAdapter adapter = this;
+		mPlaceholder = activity.getApplication().getResources().getDrawable(android.R.drawable.presence_busy);
 		mSearch = new Search();
 		mSearch.setSplitByCategories(true);
 		mSearch.addProvidersPack(new SearchableProvidersPack(activity));
@@ -96,21 +100,22 @@ public class SearchAdapter extends BaseAdapter {
 	}
 	public void setQuery(CharSequence s)
 	{
+		clear();
 		if(s.length() > 0)
 		{
 			mSearch.search(s.toString(), 0);
 		}
-		else
-		{
-			mSuggestions.clear();
-			mCount = 0;
-			mSearch.cancel();
-			for (ISearchProcessListener listener : mSearchProcessListeners) {
-				listener.onSearchFinished();
-			}
-			notifyDataSetChanged();
-		}
 		
+		
+	}
+	public void clear() {
+		mSuggestions.clear();
+		mCount = 0;
+		mSearch.cancel();
+		for (ISearchProcessListener listener : mSearchProcessListeners) {
+			listener.onSearchFinished();
+		}
+		notifyDataSetChanged();
 	}
 	
 	@Override
@@ -220,7 +225,7 @@ public class SearchAdapter extends BaseAdapter {
 									
 									public void run() {
 										updatingImageView.setImageDrawable(updatingObtainer.getIcon(mPlaceholder));
-										
+										notifyDataSetChanged();
 									}
 								});
 								

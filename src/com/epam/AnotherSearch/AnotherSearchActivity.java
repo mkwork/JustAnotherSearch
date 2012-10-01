@@ -1,10 +1,6 @@
 package com.epam.AnotherSearch;
 
 
-import com.epam.Suggestions.Suggestions.SuggestionIndex;
-import com.epam.search.Search.SearchIndex;
-import com.epam.search.data.Suggestion;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -20,6 +16,9 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import com.epam.search.Search.SearchIndex;
+import com.epam.search.data.Suggestion;
 
 public class AnotherSearchActivity extends Activity implements ISearchProcessListener{
     @Override
