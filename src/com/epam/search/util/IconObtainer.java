@@ -3,7 +3,8 @@ package com.epam.search.util;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,20 +23,24 @@ public class IconObtainer {
 	
 
 	private static ThreadPoolExecutor mExecutor = null;
+	private Map<String, Drawable> mCache = new HashMap<String, Drawable>();
 	public IconObtainer(Loadable<Drawable> loadable)
 	{
 		mLoadable = loadable;
 		if(mExecutor == null)
 		{
-			BlockingQueue<Runnable> q = new LinkedBlockingQueue<Runnable>();
-			mExecutor = new ThreadPoolExecutor(2, 4, 10, TimeUnit.MILLISECONDS, q);
+			
+			mExecutor = new ThreadPoolExecutor(2, 4, 10, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 		}
 		mTask = new FutureTask<Drawable>(new Callable<Drawable>() {
 
 			public Drawable call() throws Exception {
 				mLoadable.load();
 				
-				mIcon = mLoadable.getLoaded();	
+				mIcon = mLoadable.getLoaded();
+				synchronized (mCache) {
+					mCache.put(getSign(), mIcon);
+				}
 				onIconReady();
 				return mIcon;
 			}
@@ -54,6 +59,9 @@ public class IconObtainer {
 			public Drawable call() throws Exception {
 				Drawable icon = obtainIcon(mResIdOrUrl, mContext, mResourceOwner);
 				mIcon = icon;
+				synchronized (mCache) {
+					mCache.put(getSign(), mIcon);
+				}
 				onIconReady();
 				return mIcon;
 			}
@@ -73,6 +81,9 @@ public class IconObtainer {
 	
 	public Drawable getIcon(Drawable placeholder)
 	{
+		synchronized (mCache) {
+			mIcon = mCache.get(getSign());
+		}
 		if(mIcon != null)
 			return mIcon;
 		mExecutor.execute(mTask);
@@ -143,6 +154,20 @@ public class IconObtainer {
 		return null;
 	}
 	
+	String getSign()
+	{
+		if(mLoadable != null)
+		{
+			return mLoadable.getSign();
+		}
+		else
+		{
+			String sign =  mResIdOrUrl;
+			if(mResourceOwner != null && sign != null)
+				sign += "." + mResourceOwner.getPackageName();
+			return sign;
+		}
+	}
 	Runnable mIconReadyListener = null;
 	ComponentName mResourceOwner = null;
 	Drawable mIcon = null;
@@ -150,5 +175,6 @@ public class IconObtainer {
 	String mResIdOrUrl = null;
 	FutureTask<Drawable> mTask = null;
 	Loadable<Drawable> mLoadable = null;
+	
 	
 }

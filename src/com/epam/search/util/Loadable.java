@@ -6,5 +6,7 @@ public interface Loadable<T> {
 	T getLoaded();
 	
 	void load();
+	
+	String getSign();
 		
 }

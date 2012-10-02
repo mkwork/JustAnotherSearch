@@ -12,12 +12,18 @@ import com.epam.search.util.NotifiedLoadable;
 
 class SearhchableLoader implements NotifiedLoadable<Suggestions> {
 
+	
 	public SearhchableLoader(SearchableProvider provider, String query, int limit)
 	{
 		super();
 		mSearchableProvider = provider;
 		mQuery = query;
 		mLimit = limit;
+	}
+	
+	public String getSign() {
+		
+		return this.getClass().getName();
 	}
 	
 	public Suggestions getLoaded() {
@@ -144,6 +150,7 @@ class SearhchableLoader implements NotifiedLoadable<Suggestions> {
 	SearchableProvider mSearchableProvider = null;
 	String mQuery = null;
 	int mLimit = -1;
+	
 	
 	
  

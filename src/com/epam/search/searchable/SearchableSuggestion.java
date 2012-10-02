@@ -1,7 +1,6 @@
 package com.epam.search.searchable;
 
 import android.app.SearchManager;
-import android.app.SearchableInfo;
 import android.content.ComponentName;
 import android.content.Context;
 import android.database.Cursor;

@@ -32,7 +32,6 @@ class SearchableProvider implements SuggestionProvider {
 			mIconObtainer= new IconObtainer(new Loadable<Drawable>() {
 				
 				public void load() {
-					// TODO Auto-generated method stub
 					try {
 						mIcon =  
 						getContext().getPackageManager().
@@ -49,6 +48,11 @@ class SearchableProvider implements SuggestionProvider {
 				}
 				
 				Drawable mIcon = null;
+
+				public String getSign() {
+					
+					return "ActivityIcon." + getSearchableInfo().getSearchActivity().getPackageName();
+				}
 			});
 		}
 		return mIconObtainer;
