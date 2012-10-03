@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
-import android.content.res.Resources;
 import android.database.DataSetObserver;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.TypedValue;
 import android.view.View;
@@ -18,7 +16,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.epam.AnotherSearch.R.drawable;
 import com.epam.search.Search;
 import com.epam.search.Search.SearchIndex;
 import com.epam.search.searchable.SearchableProvidersPack;
@@ -32,7 +29,7 @@ public class SearchAdapter extends BaseAdapter {
 		mActivity = activity;
 		final Activity a = activity;
 		final SearchAdapter adapter = this;
-		mPlaceholder = activity.getApplication().getResources().getDrawable(android.R.drawable.presence_busy);
+		mPlaceholder = activity.getApplication().getResources().getDrawable(R.drawable.search_spin);
 		mSearch = new Search();
 		mSearch.setSplitByCategories(true);
 		mSearch.addProvidersPack(new SearchableProvidersPack(activity));
@@ -45,11 +42,9 @@ public class SearchAdapter extends BaseAdapter {
 				a.runOnUiThread(new Runnable() {
 					
 					public void run() {
-						synchronized (adapter) {
 							syncSearch();
 							adapter.notifyDataSetChanged();
-						}
-						
+											
 					}
 				});
 			}
@@ -65,10 +60,8 @@ public class SearchAdapter extends BaseAdapter {
 						for (ISearchProcessListener listener : adapter.mSearchProcessListeners) {
 							listener.onSearchFinished();
 						}
-						synchronized (adapter) {
 							syncSearch();
 							adapter.notifyDataSetChanged();
-						}
 						
 						
 					}
@@ -86,11 +79,11 @@ public class SearchAdapter extends BaseAdapter {
 						for (ISearchProcessListener listener : adapter.mSearchProcessListeners) {
 							listener.onSearchStarted();
 						}
-						synchronized (adapter) {
+						
 							syncSearch();
 							adapter.notifyDataSetChanged();
 							
-						}
+						
 					}
 				});
 				
@@ -232,7 +225,7 @@ public class SearchAdapter extends BaseAdapter {
 								
 							}
 						});
-						icon = obtainer.getIcon(null);
+						icon = obtainer.getIcon(mPlaceholder);
 						iconView.setImageDrawable(icon);
 					
 				}

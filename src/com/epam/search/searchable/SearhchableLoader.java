@@ -34,6 +34,7 @@ class SearhchableLoader implements NotifiedLoadable<Suggestions> {
 		
 		try
 		{
+			onLoadStarted();
 			mSuggestions = null;
 			if(mSearchableProvider == null)
 			{
@@ -77,8 +78,10 @@ class SearhchableLoader implements NotifiedLoadable<Suggestions> {
 						sortOrder);
 			
 			mSuggestions = new SearchableSuggestions(mSearchableProvider, cursor);
+			onLoadFinished();
 		}catch (Exception e) {
 			e.printStackTrace();
+			onLoadFinished();
 		}
 		
 		

@@ -4,17 +4,26 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import android.database.DataSetObserver;
 
-import com.epam.search.SearchWorker.SearchWorkerProcessListener;
 import com.epam.search.data.ProvidersPack;
 import com.epam.search.data.Suggestion;
 import com.epam.search.data.SuggestionProvider;
 import com.epam.search.data.Suggestions;
 
-public class Search implements SearchWorkerProcessListener{
 
+public class Search {
+
+	public Search()
+	{
+		super();
+		new ThreadPoolExecutor(2, 4, 10, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+				
+	}
 	public boolean getSplitByCategories() {
 		return mSplitByCategories;
 	}
@@ -33,18 +42,23 @@ public class Search implements SearchWorkerProcessListener{
 	
 	public void cancel()
 	{
-		synchronized (mSuggestions) {
-			
-			
-			mWorker.setWorkProgressListener(null);
-			mWorker.cancel();
-			mSuggestions.clear();
-			mCount = getCountFromState();
-			onDataSetChanged();
-			
-		}
-			
 		
+		if(mExecutor != null)
+		{
+			mExecutor.shutdown();
+			for (Runnable runnable : mExecutor.getQueue()) {
+				SearchTask task = (SearchTask)runnable;
+				if(task != null)
+				{
+					task.cancel(false);
+				}
+			}
+		}
+		mSuggestionsInternal.clear();
+		mCount = 0;
+		onDataSetChanged();
+		mExecutor = new ThreadPoolExecutor(getMinThreadsCount(), getMaxThreadsCount(), 100, TimeUnit.MILLISECONDS,
+				new LinkedBlockingQueue<Runnable>());
 		
 	}
 	
@@ -52,21 +66,20 @@ public class Search implements SearchWorkerProcessListener{
 	{
 		
 			this.cancel();
-			mWorker = new SearchWorker(); 
+			 
 			for (ProvidersPack pack : mProviderPacks) {
 				for (SuggestionProvider provider : pack.providers()) {
-					mWorker.addTask(provider.getSuggestionsLoader(query, maxResults));
+
+					mExecutor.execute(new SearchTask(this, provider.getSuggestionsLoader(query, maxResults)));
 				}
 			}
-			mWorker.setWorkProgressListener(this);
-			mWorker.start();
-		
-		
+			
+			onWorkStart();		
 	}
 	
 	public int getCount()
 	{
-		synchronized (mSuggestions) {
+		synchronized (mSuggestionsInternal) {
 			return mCount;	
 		}
 		
@@ -75,7 +88,7 @@ public class Search implements SearchWorkerProcessListener{
 	private int getCountFromState()
 	{
 			int count = 0;
-			for (Suggestions suggestions : mSuggestions) {
+			for (Suggestions suggestions : mSuggestionsInternal) {
 				if(suggestions == null || suggestions.getCount() <= 0 
 						|| !useProvider(suggestions.getProvider()))
 				{
@@ -97,9 +110,9 @@ public class Search implements SearchWorkerProcessListener{
 	public SearchIndex getAt(int pos)
 	{
 		
-		synchronized (mSuggestions) {
+		synchronized (mSuggestionsInternal) {
 			int i = 0;
-			for (Suggestions suggestions : mSuggestions) {
+			for (Suggestions suggestions : mSuggestionsInternal) {
 				if(suggestions == null || suggestions.getCount() <= 0 
 						|| !useProvider(suggestions.getProvider()))
 				{
@@ -204,7 +217,7 @@ public class Search implements SearchWorkerProcessListener{
 	}
 	
 	public void onWorkStart() {
-		synchronized (mSuggestions) {
+		synchronized (mSuggestionsInternal) {
 			mCount = getCountFromState();
 			onDataSetChanged();
 			if(mStartListener != null)
@@ -216,15 +229,19 @@ public class Search implements SearchWorkerProcessListener{
 	}
 	public void onSuggestionsReady(Suggestions suggestions) {
 		
-		synchronized (mSuggestions) {
-			mSuggestions.add(suggestions);
+		synchronized (mSuggestionsInternal) {
+			mSuggestionsInternal.add(suggestions);
 			mCount = getCountFromState();
 			onDataSetChanged();
+			if(mExecutor.getCompletedTaskCount() == mExecutor.getTaskCount() - 1)
+			{
+				onWorkEnd();
+			}
 		}
 			
 	}
 	public void onWorkEnd() {
-		synchronized (mSuggestions) {
+		synchronized (mSuggestionsInternal) {
 			
 			mCount = getCountFromState();
 			if(mEndListener != null)
@@ -292,15 +309,30 @@ public class Search implements SearchWorkerProcessListener{
 			return mSettings.isProviderOn(provider);
 		}
 	}
+	
+	
+	
+	private int getMinThreadsCount()
+	{
+		return 2;
+	}
+	
+	private int getMaxThreadsCount()
+	{
+		return 8;
+	}
+	
 	private List<ProvidersPack> mProviderPacks = new ArrayList<ProvidersPack>(); 
 	private Boolean mSplitByCategories = false;
 	private SearchSettings mSettings = null;
 	private Set<DataSetObserver> mObservers = new HashSet<DataSetObserver>();
-	private SearchWorker mWorker = new SearchWorker();
-	private List<Suggestions> mSuggestions = new ArrayList<Suggestions>();
+	private List<Suggestions> mSuggestionsInternal = new ArrayList<Suggestions>();
 	private int mCount = 0;
 	private Runnable mStartListener = null;
 	private Runnable mEndListener = null;
+	private ThreadPoolExecutor mExecutor = null;
+	
+	
 	
 	
 }
