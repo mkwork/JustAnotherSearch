@@ -96,7 +96,7 @@ public class SearchAdapter extends BaseAdapter {
 		clear();
 		if(s.length() > 0)
 		{
-			mSearch.search(s.toString(), 0);
+			mSearch.search(s.toString(), 30);
 		}
 		
 		
