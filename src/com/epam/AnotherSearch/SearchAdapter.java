@@ -18,7 +18,6 @@ import android.widget.TextView;
 
 import com.epam.search.Search;
 import com.epam.search.Search.SearchIndex;
-import com.epam.search.searchable.SearchableProvidersPack;
 import com.epam.search.util.IconObtainer;
 
 public class SearchAdapter extends BaseAdapter {

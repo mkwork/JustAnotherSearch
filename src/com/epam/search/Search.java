@@ -133,9 +133,9 @@ public class Search {
 				}
 				
 				int bound = i + suggestions.getCount();
-				if(getSplitByCategories())
+				if(!getSplitByCategories())
 				{
-					bound ++;
+					bound --;
 				}
 				
 				if (i == pos || pos <= bound )
