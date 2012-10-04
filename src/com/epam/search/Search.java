@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -56,9 +57,10 @@ public class Search {
 		}
 		mSuggestionsInternal.clear();
 		mCount = 0;
-		onDataSetChanged();
-		mExecutor = new ThreadPoolExecutor(getMinThreadsCount(), getMaxThreadsCount(), 100, TimeUnit.MILLISECONDS,
+		mExecutor = new ThreadPoolExecutor(getMinThreadsCount(), getMaxThreadsCount(), 1000, TimeUnit.MILLISECONDS,
 				new LinkedBlockingQueue<Runnable>());
+		mSuggestions.clear();
+		onDataSetChanged();
 		
 	}
 	
@@ -66,15 +68,26 @@ public class Search {
 	{
 		
 			this.cancel();
-			 
-			for (ProvidersPack pack : mProviderPacks) {
-				for (SuggestionProvider provider : pack.providers()) {
+			if(query != null && query.length() > 0)
+			{
+				Boolean searchStarted = false;
+				for (ProvidersPack pack : mProviderPacks) {
+					for (SuggestionProvider provider : pack.providers()) {
 
-					mExecutor.execute(new SearchTask(this, provider.getSuggestionsLoader(query, maxResults)));
+						if(useProvider(provider))
+						{
+							mExecutor.submit(new SearchTask(this, provider.getSuggestionsLoader(query, maxResults)));
+							searchStarted = true;
+						}
+							
+					}
 				}
+				if(searchStarted)
+				{
+					onWorkStart();					
+				}
+						
 			}
-			
-			onWorkStart();		
 	}
 	
 	public int getCount()
@@ -90,15 +103,15 @@ public class Search {
 			int count = 0;
 			for (Suggestions suggestions : mSuggestionsInternal) {
 				if(suggestions == null || suggestions.getCount() <= 0 
-						|| !useProvider(suggestions.getProvider()))
+						)
 				{
 					continue;
 				}
 				
 				count += suggestions.getCount();
-				if(!getSplitByCategories())
+				if(getSplitByCategories())
 				{
-					count--;
+					count++;
 				}
 				
 			}
@@ -114,15 +127,15 @@ public class Search {
 			int i = 0;
 			for (Suggestions suggestions : mSuggestionsInternal) {
 				if(suggestions == null || suggestions.getCount() <= 0 
-						|| !useProvider(suggestions.getProvider()))
+						)
 				{
 					continue;
 				}
 				
 				int bound = i + suggestions.getCount();
-				if(!getSplitByCategories())
+				if(getSplitByCategories())
 				{
-					bound --;
+					bound ++;
 				}
 				
 				if (i == pos || pos <= bound )
@@ -322,6 +335,7 @@ public class Search {
 		return 8;
 	}
 	
+	private List<Future<Suggestions>> mSuggestions = new ArrayList<Future<Suggestions>>();
 	private List<ProvidersPack> mProviderPacks = new ArrayList<ProvidersPack>(); 
 	private Boolean mSplitByCategories = false;
 	private SearchSettings mSettings = null;

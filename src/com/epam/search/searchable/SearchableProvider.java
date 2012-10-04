@@ -15,6 +15,7 @@ import com.epam.search.util.NotifiedLoadable;
 
 class SearchableProvider implements SuggestionProvider {
 
+	private final static String SEARCHABLE_KEY_PREFIX = "Searchable";
 	public SearchableProvider(Context context, SearchableInfo info)
 	{
 		setSearchInfo(info);
@@ -22,8 +23,12 @@ class SearchableProvider implements SuggestionProvider {
 	}
 	
 	public String getKey() {
-		// TODO Auto-generated method stub
-		return null;
+		SearchableInfo info = getSearchableInfo();
+		String suggestionPackage = info.getSuggestPackage();
+		String suggestionAuthority = info.getSuggestAuthority();
+		String suggestionPath= info.getSuggestPath();
+		return SEARCHABLE_KEY_PREFIX + ":" +suggestionPackage + ":" + suggestionAuthority  + ":" + suggestionPath;
+		
 	}
 
 	public IconObtainer getIcon() {

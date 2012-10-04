@@ -12,6 +12,7 @@ public class SettingsActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.settings);
 		mListView = (ListView)findViewById(R.id.lvSettings);
+			
 		mListView.setAdapter(new SettingsAdapter(this));
 		
 	}

@@ -1,8 +1,7 @@
 package com.epam.AnotherSearch;
-import com.epam.Suggestions.ISuggestion;
-import com.epam.Suggestions.Suggestions;
-
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -11,20 +10,30 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.LinearLayout.LayoutParams;
+import android.widget.TextView;
+
+import com.epam.search.Search;
+import com.epam.search.data.ProvidersPack;
+import com.epam.search.data.SuggestionProvider;
+import com.epam.search.util.IconObtainer;
 
 
 public class SettingsAdapter extends BaseAdapter {
 
 	public SettingsAdapter(Context context) {
-		mSuggestions = new Suggestions(context);
-	//	mSuggestions.setSettings(new Settings());
+		mSearch = new FullSearchComposer(context).getSearch();
+		
+		
 	}
 	
 	public int getCount() {
 		
-		return mSuggestions.getSuggestions().size();
+		int count = 0;
+		for (ProvidersPack pack : mSearch.getProvidersPacks()) {
+			count += pack.providers().size();
+		}
+		return count;
 	}
 
 	public Object getItem(int position) {
@@ -37,7 +46,7 @@ public class SettingsAdapter extends BaseAdapter {
 	}
 
 	public View getView(int position, View convertView, ViewGroup parent) {
-		final ISuggestion suggestion = mSuggestions.getSuggestions().get(position);
+		final SuggestionProvider provider = getProvider(position);
 		LinearLayout layout = (LinearLayout)convertView;
 		TextView textView = null;
 		ImageView imageView = null;
@@ -66,15 +75,33 @@ public class SettingsAdapter extends BaseAdapter {
 			checkBox = (CheckBox)layout.getChildAt(2);
 		}
 		
-		textView.setText(suggestion.getText());
-		imageView.setImageDrawable(suggestion.getIcon());
+		textView.setText(provider.getName());
+		final IconObtainer obtainer = provider.getIcon();
+		final ImageView imageViewWillUpdated = imageView;
+		obtainer.setIconReadyListener(new Runnable() {
+			
+			public void run() {
+				Activity a = (Activity)imageViewWillUpdated.getContext();
+				a.runOnUiThread(new Runnable() {
+					
+					public void run() {
+						imageViewWillUpdated.setImageDrawable(obtainer.getIcon(mPlaceholder));
+						notifyDataSetChanged();
+					}
+				});
+				
+			}
+		});
+		
+		imageView.setImageDrawable(obtainer.getIcon(mPlaceholder));
 		checkBox.setOnCheckedChangeListener(new OnCheckedChangeListener()
 		{
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
 		    {
 		    	try
 				{
-//					mSuggestions.getSettings().swithcProviderOn(suggestion, isChecked);
+					
+					mSearch.getSettings().swithcProviderOn(provider, isChecked);
 				}catch (NullPointerException e) {
 					throw new IllegalStateException("Suggestions settings must not be null, see Suggestions.setSettings(SearchSettings)");
 				}
@@ -82,12 +109,26 @@ public class SettingsAdapter extends BaseAdapter {
 		});
 		try
 		{
-	//		checkBox.setChecked(mSuggestions.getSettings().isProviderOn(suggestion));
+		checkBox.setChecked(mSearch.getSettings().isProviderOn(provider));
 		}catch (NullPointerException e) {
 			throw new IllegalStateException("Suggestions settings must not be null, see Suggestions.setSettings(SearchSettings)");
 		}
 		return layout;
 	}
-
-	Suggestions mSuggestions = null;
+	
+	private SuggestionProvider getProvider(int i) {
+		SuggestionProvider provider = null;
+		int index = 0;
+		for (ProvidersPack pack : mSearch.getProvidersPacks()) {
+			if(i == index || i < index + pack.providers().size())
+			{
+				int at = (i + pack.providers().size()) - (index + pack.providers().size());
+				return pack.providers().get(at);
+			}
+			index += pack.providers().size();
+		}
+		return provider;
+	}
+	Search mSearch = null;
+	Drawable mPlaceholder = null;
 }

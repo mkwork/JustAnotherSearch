@@ -30,9 +30,8 @@ public class SearchAdapter extends BaseAdapter {
 		final Activity a = activity;
 		final SearchAdapter adapter = this;
 		mPlaceholder = activity.getApplication().getResources().getDrawable(R.drawable.search_spin);
-		mSearch = new Search();
+		mSearch = new FullSearchComposer(mActivity).getSearch();
 		mSearch.setSplitByCategories(true);
-		mSearch.addProvidersPack(new SearchableProvidersPack(activity));
 		mSearch.registerDataSetObserver(new DataSetObserver() {
 
 			@Override
@@ -43,7 +42,7 @@ public class SearchAdapter extends BaseAdapter {
 					
 					public void run() {
 							syncSearch();
-							adapter.notifyDataSetChanged();
+							notifyDataSetChanged();
 											
 					}
 				});
@@ -61,7 +60,7 @@ public class SearchAdapter extends BaseAdapter {
 							listener.onSearchFinished();
 						}
 							syncSearch();
-							adapter.notifyDataSetChanged();
+							notifyDataSetChanged();
 						
 						
 					}
@@ -81,9 +80,8 @@ public class SearchAdapter extends BaseAdapter {
 						}
 						
 							syncSearch();
-							adapter.notifyDataSetChanged();
-							
-						
+							notifyDataSetChanged();
+													
 					}
 				});
 				
@@ -102,12 +100,13 @@ public class SearchAdapter extends BaseAdapter {
 		
 	}
 	public void clear() {
-		mSuggestions.clear();
-		mCount = 0;
+		
 		mSearch.cancel();
 		for (ISearchProcessListener listener : mSearchProcessListeners) {
 			listener.onSearchFinished();
 		}
+		mSuggestions.clear();
+		mCount = 0;
 		notifyDataSetChanged();
 	}
 	
