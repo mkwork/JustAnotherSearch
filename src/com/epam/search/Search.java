@@ -17,6 +17,10 @@ import com.epam.search.data.SuggestionProvider;
 import com.epam.search.data.Suggestions;
 
 
+/**
+ * @author Maxim_Kot
+ *Search in setuped providers
+ */
 public class Search {
 
 	public Search()
@@ -25,22 +29,37 @@ public class Search {
 		new ThreadPoolExecutor(2, 4, 10, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 				
 	}
+	/**
+	 * @return is there need split results by categories
+	 */
 	public boolean getSplitByCategories() {
 		return mSplitByCategories;
 	}
 	
+	/** setup is there need split results by categories
+	 * @param splitByCategories 
+	 */
 	public void setSplitByCategories(boolean splitByCategories) {
 		mSplitByCategories = splitByCategories;
 	}
 	
+	/**
+	 * @return settings which use this search instance 
+	 */
 	public SearchSettings getSettings() {
 		return mSettings;
 	}
 	
+	/**set settings 
+	 * @param settings
+	 */
 	public void setSettings(SearchSettings settings) {
 		mSettings = settings;
 	}
 	
+	/**
+	 * stops all current search, and clear all results
+	 */
 	public void cancel()
 	{
 		
@@ -64,6 +83,10 @@ public class Search {
 		
 	}
 	
+	/**start new search
+	 * @param query search query
+	 * @param maxResults maximum search results
+	 */
 	public void search(String query, int maxResults)
 	{
 		
@@ -90,6 +113,9 @@ public class Search {
 			}
 	}
 	
+	/**
+	 * @return ready to use results count
+	 */
 	public int getCount()
 	{
 		synchronized (mSuggestionsInternal) {
@@ -98,28 +124,10 @@ public class Search {
 		
 	}
 	
-	private int getCountFromState()
-	{
-			int count = 0;
-			for (Suggestions suggestions : mSuggestionsInternal) {
-				if(suggestions == null || suggestions.getCount() <= 0 
-						)
-				{
-					continue;
-				}
-				
-				count += suggestions.getCount();
-				if(getSplitByCategories())
-				{
-					count++;
-				}
-				
-			}
-			return count;	
-		
-		
-	}
-	
+	/** obtains SearchIndex for given position
+	 * @param pos position
+	 * @return new instance of index object or null if there no so object.
+	 */
 	public SearchIndex getAt(int pos)
 	{
 		
@@ -175,11 +183,17 @@ public class Search {
 						
 	}
 	
+	/**appends new provider pack
+	 * @param pack 
+	 */
 	public void addProvidersPack(ProvidersPack pack)
 	{
 		mProviderPacks.add(pack);
 	}
 	
+	/**removes pack
+	 * @param name name of pack
+	 */
 	public void removeProvidersPack(String name)
 	{
 		ProvidersPack forRemove = null;
@@ -196,50 +210,34 @@ public class Search {
 		}
 	}
 	
+	/**
+	 * @return list of registered for this search provider packs
+	 */
 	public final List<ProvidersPack> getProvidersPacks()
 	{
 		return mProviderPacks;
 	}
 	
+	/**Register observer which will get notifications about search state changing
+	 * @param observer
+	 */
 	public void registerDataSetObserver(DataSetObserver observer)
 	{
 		mObservers.add(observer);
 	}
 	
+	/**Unregister observer which will get notifications about search state changing
+	 * @param observer
+	 */
 	public void unregisterDataSetObserver(DataSetObserver observer)
 	{
 		mObservers.remove(observer);
 	}
 	
-	private void onDataSetChanged()
-	{
-		
-			for (DataSetObserver observer : mObservers) {
-				observer.onChanged();
-			}	
-		
-		
-	}
 	
-	@SuppressWarnings("unused")
-	private void onDataSetInvalidated()
-	{
-		for (DataSetObserver observer : mObservers) {
-			observer.onInvalidated();
-		}
-	}
-	
-	public void onWorkStart() {
-		synchronized (mSuggestionsInternal) {
-			mCount = getCountFromState();
-			onDataSetChanged();
-			if(mStartListener != null)
-			{
-				mStartListener.run();
-			}	
-		}
-		
-	}
+	/** Must be run when part of suggestions ready
+	 * @param suggestions
+	 */
 	public void onSuggestionsReady(Suggestions suggestions) {
 		
 		synchronized (mSuggestionsInternal) {
@@ -253,7 +251,125 @@ public class Search {
 		}
 			
 	}
-	public void onWorkEnd() {
+			
+	/** Setup callback which will be called when search will start
+	 * @param listener
+	 */
+	public void setSearchStartListener(Runnable listener)
+	{
+		
+			mStartListener = listener;
+		
+	}
+	
+	/**Setup callback which will be called when search will be finished
+	 * @param listener
+	 */
+	public void setSearchEndListener(Runnable listener)
+	{
+		
+			mEndListener = listener;	
+		
+	}
+	
+	/**
+	 * @author Maxim_Kot
+	 *Via this index you can access search results
+	 */
+	public class SearchIndex
+	{
+		
+		protected SearchIndex(SuggestionProvider provider, Suggestion suggestion)
+		{
+			mSuggestionProvider = provider;
+			mSuggestion = suggestion;
+		}
+		
+		/**
+		 * @return provider which suggestion represented
+		 */
+		public SuggestionProvider getSuggestionProvider()
+		{
+			if(mSuggestion != null)
+			{
+				return mSuggestion.getSuggestions().getProvider();
+			}
+			return mSuggestionProvider;
+		}
+		
+		/**
+		 * @return search result or null if index refers on category header
+		 */
+		public Suggestion getSuggestion()
+		{
+			return mSuggestion;
+		}
+		
+		/**
+		 * @return true if index refers on category header
+		 */
+		public boolean isCategory()
+		{
+			return mSuggestion == null;
+		}
+		private Suggestion mSuggestion = null;
+		private SuggestionProvider mSuggestionProvider = null;
+	}
+	
+	
+	private void onDataSetChanged()
+	{
+		
+			for (DataSetObserver observer : mObservers) {
+				observer.onChanged();
+			}	
+		
+		
+	}
+	
+	private int getCountFromState()
+	{
+			int count = 0;
+			for (Suggestions suggestions : mSuggestionsInternal) {
+				if(suggestions == null || suggestions.getCount() <= 0 
+						)
+				{
+					continue;
+				}
+				
+				count += suggestions.getCount();
+				if(getSplitByCategories())
+				{
+					count++;
+				}
+				
+			}
+			return count;	
+		
+		
+	}
+	
+	@SuppressWarnings("unused")
+	private void onDataSetInvalidated()
+	{
+		for (DataSetObserver observer : mObservers) {
+			observer.onInvalidated();
+		}
+	}
+	
+	private void onWorkStart() {
+		synchronized (mSuggestionsInternal) {
+			mCount = getCountFromState();
+			onDataSetChanged();
+			if(mStartListener != null)
+			{
+				mStartListener.run();
+			}	
+		}
+		
+	}
+	
+	private void onWorkEnd() {
 		synchronized (mSuggestionsInternal) {
 			
 			mCount = getCountFromState();
@@ -267,49 +383,6 @@ public class Search {
 		}
 		
 	}
-	
-	public void setSearchStartListener(Runnable listener)
-	{
-		
-			mStartListener = listener;
-		
-	}
-	
-	public void setSearchEndListener(Runnable listener)
-	{
-		
-			mEndListener = listener;	
-		
-	}
-	
-	public class SearchIndex
-	{
-		protected SearchIndex(SuggestionProvider provider, Suggestion suggestion)
-		{
-			mSuggestionProvider = provider;
-			mSuggestion = suggestion;
-		}
-		public SuggestionProvider getSuggestionProvider()
-		{
-			if(mSuggestion != null)
-			{
-				return mSuggestion.getSuggestions().getProvider();
-			}
-			return mSuggestionProvider;
-		}
-		public Suggestion getSuggestion()
-		{
-			return mSuggestion;
-		}
-		
-		public boolean isCategory()
-		{
-			return mSuggestion == null;
-		}
-		private Suggestion mSuggestion = null;
-		private SuggestionProvider mSuggestionProvider = null;
-	}
-	
 
 	private boolean useProvider(SuggestionProvider provider)
 	{
