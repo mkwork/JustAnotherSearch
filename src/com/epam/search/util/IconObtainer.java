@@ -19,11 +19,21 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
+/**
+ * @author Maxim_Kot
+ *
+ *Icon loader which provide obtaining of icon by resource id, uri or by custom loader. 
+ *If icon was provided once it will be cached and next time will be provided without loading.  
+ */
 public class IconObtainer {
 	
 
 	private static ThreadPoolExecutor mExecutor = null;
 	private Map<String, Drawable> mCache = new HashMap<String, Drawable>();
+	
+	/**Creates obtainer with custom loader. As a cache key will be used Loadable.getSign()
+	 * @param loadable - Loadable which will load an icon.
+	 */
 	public IconObtainer(Loadable<Drawable> loadable)
 	{
 		mLoadable = loadable;
@@ -48,6 +58,12 @@ public class IconObtainer {
 		});
 		
 	}
+	
+	/**Constructs obtainer which will obtain icon by it's resource id or uri
+	 * @param context will be used for obtain resource or load uri
+	 * @param source resource id or uri
+	 * @param resourceOwner if id is resource then it will be used for search resources
+	 */
 	public IconObtainer(Context context, String source, ComponentName resourceOwner)
 	{
 		mContext = context;
@@ -70,6 +86,9 @@ public class IconObtainer {
 
 	}
 	
+	/**
+	 * @return true if icon was loaded 
+	 */
 	public boolean isReady()
 	{
 		synchronized (mIcon) {
@@ -79,6 +98,10 @@ public class IconObtainer {
 	}
 	
 	
+	/**Returns loaded icon or placeholder if icon still not loaded and starts loading
+	 * @param placeholder will be returned if icon not loaded
+	 * @return
+	 */
 	public Drawable getIcon(Drawable placeholder)
 	{
 		synchronized (mCache) {
@@ -91,10 +114,16 @@ public class IconObtainer {
 		return placeholder;
 	}
 	
+	/**
+	 * Setups callback for icon readness
+	 * @param listener will be called when icon will be loaded
+	 * ATTENTION: this call back can be called not in caller thread.
+	 */
 	public void setIconReadyListener(Runnable listener)
 	{
 		mIconReadyListener = listener;
 	}
+	
 	private void onIconReady()
 	{
 		if(mIconReadyListener != null)
