@@ -10,7 +10,10 @@ import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
@@ -22,6 +25,20 @@ import com.epam.search.data.Suggestion;
 
 public class AnotherSearchActivity extends Activity implements ISearchProcessListener{
     @Override
+	public void onUserInteraction() {
+    	View edit = findViewById(R.id.etSearch);
+		
+			InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+			if(imm != null)
+			{
+				imm.hideSoftInputFromWindow(edit.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+			}
+		
+		super.onUserInteraction();
+	}
+
+	
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = new MenuInflater(this);
 		inflater.inflate(R.menu.main_menu, menu);
@@ -45,51 +62,73 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        this.getSystemService(SEARCH_SERVICE);
-        getContentResolver();
-        mSearchAdapter = new SearchAdapter(this);
-        ListView listView = ((ListView)findViewById(R.id.lvSearchResults)); 
-        listView.setAdapter(mSearchAdapter);
-        listView.setOnItemClickListener(new OnItemClickListener() {
-
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				SearchIndex index = (SearchIndex)parent.getAdapter().getItem(position);
-				if (index != null)
-				{
-					Suggestion suggestion = index.getSuggestion();
-					if(suggestion == null)
-					{
-						Toast.makeText(parent.getContext(),
-								parent.getContext().getResources().getText(R.string.suggestion_not_launchable) , Toast.LENGTH_SHORT).show();
-					}
-					else
-					{
-						Runnable suggestionLauncher = suggestion.getLauncher();
-						try {
-							suggestionLauncher.run();
-						} catch (Exception e) {
-							Toast.makeText(parent.getContext(),
-									parent.getContext().getResources().getText(R.string.suggestion_not_launchable) , Toast.LENGTH_SHORT).show();
-							e.printStackTrace();
-						}
-					}
-					
-					
-				}
-				else
-				{
-					Toast.makeText(parent.getContext(),
-							parent.getContext().getResources().getText(R.string.some_uncauched_error) , Toast.LENGTH_SHORT).show();
-				}
-			}
-		});
-        EditText searchView = ((EditText)findViewById(R.id.etSearch));
-        searchView.addTextChangedListener(new TextEditSearchEventslistener());
-        mSearchAdapter.addSearchProcessListener(this);
+        init();
            
     
     }
+
+	private void init() {
+		
+		      
+        mSearchAdapter = new SearchAdapter(this);
+        ListView listView = ((ListView)findViewById(R.id.lvSearchResults)); 
+        listView.setAdapter(mSearchAdapter);
+        initCallbacks();
+      }
+
+	private void initCallbacks() {
+		View main = findViewById(R.id.mainLayout);
+        main.setOnTouchListener(new OnTouchListener() {
+			
+			public boolean onTouch(View v, MotionEvent event) {
+				InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+				if(imm != null)
+				{
+					imm.hideSoftInputFromWindow(v.getWindowToken(), RESULT_OK);
+				}
+				return false;
+			}
+		});
+        
+        ListView listView = (ListView)findViewById(R.id.lvSearchResults);
+        listView.setOnItemClickListener(new OnItemClickListener() {
+    		public void onItemClick(AdapterView<?> parent, View view,
+    				int position, long id) {
+    				SearchIndex index = (SearchIndex)parent.getAdapter().getItem(position);
+    				if (index != null)
+    				{
+    					Suggestion suggestion = index.getSuggestion();
+    					if(suggestion == null)
+    					{
+    						Toast.makeText(parent.getContext(),
+    								parent.getContext().getResources().getText(R.string.suggestion_not_launchable) , Toast.LENGTH_SHORT).show();
+    					}
+    					else
+    					{
+    						Runnable suggestionLauncher = suggestion.getLauncher();
+    						try {
+    							suggestionLauncher.run();
+    						} catch (Exception e) {
+    							Toast.makeText(parent.getContext(),
+    									parent.getContext().getResources().getText(R.string.suggestion_not_launchable) , Toast.LENGTH_SHORT).show();
+    							e.printStackTrace();
+    						}
+    					}
+    					
+    					
+    				}
+    				else
+    				{
+    					Toast.makeText(parent.getContext(),
+    							parent.getContext().getResources().getText(R.string.some_uncauched_error) , Toast.LENGTH_SHORT).show();
+    				}
+    			}
+    		});
+        EditText searchView = ((EditText)findViewById(R.id.etSearch));
+        searchView.addTextChangedListener(new TextEditSearchEventslistener());
+        mSearchAdapter.addSearchProcessListener(this);
+
+	}
     
     private class TextEditSearchEventslistener implements TextWatcher
     {
@@ -145,4 +184,5 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
 		Intent i = new Intent(this, SettingsActivity.class);
 		startActivity(i);
 	}
+		
 }
