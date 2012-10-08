@@ -24,7 +24,6 @@ public class SettingsAdapter extends BaseAdapter {
 	public SettingsAdapter(Context context) {
 		mSearch = new FullSearchComposer(context).getSearch();
 		
-		
 	}
 	
 	public int getCount() {

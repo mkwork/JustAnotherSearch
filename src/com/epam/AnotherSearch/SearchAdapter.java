@@ -28,7 +28,7 @@ public class SearchAdapter extends BaseAdapter {
 		mActivity = activity;
 		final Activity a = activity;
 		final SearchAdapter adapter = this;
-		mPlaceholder = activity.getApplication().getResources().getDrawable(R.drawable.search_spin);
+		mPlaceholder = activity.getApplication().getResources().getDrawable(android.R.drawable.ic_menu_view);
 		mSearch = new FullSearchComposer(mActivity).getSearch();
 		mSearch.setSplitByCategories(true);
 		mSearch.registerDataSetObserver(new DataSetObserver() {
