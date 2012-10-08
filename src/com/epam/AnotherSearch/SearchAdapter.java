@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.database.DataSetObserver;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils.TruncateAt;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -161,24 +162,25 @@ public class SearchAdapter extends BaseAdapter {
 									iconView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 					iconView.setAdjustViewBounds(true);
 					
-					textView.setTextSize(TypedValue.COMPLEX_UNIT_FRACTION_PARENT, 25);
-					
+									
 					int textSize = (int)textView.getTextSize();
 					
 					LinearLayout.LayoutParams imageViewParams = 
 		        			new LinearLayout.LayoutParams(textSize * 2, textSize * 2);
 										
 					
-					layout.addView(textView, textViewParams);
+					
 					layout.addView(iconView, imageViewParams);
+					layout.addView(textView, textViewParams);
 					
 					
 					
 				}
 				else
 				{
-					textView = (TextView)layout.getChildAt(0);
-					iconView = (ImageView)layout.getChildAt(1);
+					iconView = (ImageView)layout.getChildAt(0);
+					textView = (TextView)layout.getChildAt(1);
+					
 				}
 				
 				String text = null;
@@ -203,6 +205,17 @@ public class SearchAdapter extends BaseAdapter {
 					
 				}
 				textView.setText(text);
+				if(index.isCategory())
+				{
+					textView.setTextSize(TypedValue.COMPLEX_UNIT_FRACTION_PARENT, 30);
+					textView.setSingleLine(false);
+				}
+				else
+				{
+					textView.setTextSize(TypedValue.COMPLEX_UNIT_FRACTION_PARENT, 25);
+					textView.setSingleLine(true);
+					textView.setEllipsize(TruncateAt.END);
+				}
 				
 				if(obtainer != null)
 				{
