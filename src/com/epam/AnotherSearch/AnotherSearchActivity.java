@@ -14,8 +14,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AbsListView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -24,18 +26,7 @@ import com.epam.search.Search.SearchIndex;
 import com.epam.search.data.Suggestion;
 
 public class AnotherSearchActivity extends Activity implements ISearchProcessListener{
-    @Override
-	public void onUserInteraction() {
-    	View edit = findViewById(R.id.etSearch);
-		
-			InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
-			if(imm != null)
-			{
-				imm.hideSoftInputFromWindow(edit.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-			}
-		
-		super.onUserInteraction();
-	}
+    
 
 	
 	@Override
@@ -69,28 +60,46 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
 
 	private void init() {
 		
-		      
-        mSearchAdapter = new SearchAdapter(this);
-        ListView listView = ((ListView)findViewById(R.id.lvSearchResults)); 
+		
+		mSearchAdapter = new SearchAdapter(this);
+		ListView listView = ((ListView)findViewById(R.id.lvSearchResults)); 
         listView.setAdapter(mSearchAdapter);
         initCallbacks();
+        
       }
 
 	private void initCallbacks() {
 		View main = findViewById(R.id.mainLayout);
+		
         main.setOnTouchListener(new OnTouchListener() {
 			
 			public boolean onTouch(View v, MotionEvent event) {
-				InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
-				if(imm != null)
-				{
-					imm.hideSoftInputFromWindow(v.getWindowToken(), RESULT_OK);
-				}
+				hideKeyBoard();
 				return false;
 			}
 		});
         
+        
         ListView listView = (ListView)findViewById(R.id.lvSearchResults);
+        listView.setOnTouchListener(new OnTouchListener() {
+			
+			public boolean onTouch(View v, MotionEvent event) {
+				hideKeyBoard();
+				return false;
+			}
+		});
+        
+        listView.setOnScrollListener(new OnScrollListener() {
+			
+			public void onScrollStateChanged(AbsListView view, int scrollState) {
+				hideKeyBoard();
+			}
+			
+			public void onScroll(AbsListView view, int firstVisibleItem,
+					int visibleItemCount, int totalItemCount) {
+								
+			}
+		});
         listView.setOnItemClickListener(new OnItemClickListener() {
     		public void onItemClick(AdapterView<?> parent, View view,
     				int position, long id) {
@@ -183,6 +192,16 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
 	{
 		Intent i = new Intent(this, SettingsActivity.class);
 		startActivity(i);
+	}
+	
+	private void hideKeyBoard()
+	{
+		View v = findViewById(R.id.etSearch);
+		InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+		if(imm != null)
+		{
+			imm.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+		}
 	}
 		
 }
