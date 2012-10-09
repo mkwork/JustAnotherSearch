@@ -128,10 +128,11 @@ public class Search {
 		for (Future<Suggestions> task : mSuggestions) {
 			if(task.isDone())
 			{
-				count += getSuggestionsCountFromTask(task);
-				if(getSplitByCategories())
+				int curCount = getSuggestionsCountFromTask(task); 
+				count += curCount;
+				if(getSplitByCategories() && curCount > 0)
 				{
-					//count ++;
+					count ++;
 				}
 			}
 						
@@ -218,7 +219,7 @@ public class Search {
 					return sIndex;
 				}
 						
-				i += suggestions.getCount();
+				i += count;
 				if(getSplitByCategories())
 				{
 					i++;
