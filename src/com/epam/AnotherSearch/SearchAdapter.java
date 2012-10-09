@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.database.DataSetObserver;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils.TruncateAt;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +29,7 @@ public class SearchAdapter extends BaseAdapter {
 		mActivity = activity;
 		final Activity a = activity;
 		final SearchAdapter adapter = this;
-		mPlaceholder = activity.getApplication().getResources().getDrawable(R.drawable.search_spin);
+		mPlaceholder = activity.getApplication().getResources().getDrawable(android.R.drawable.ic_menu_view);
 		mSearch = new FullSearchComposer(mActivity).getSearch();
 		mSearch.setSplitByCategories(true);
 		mSearch.registerDataSetObserver(new DataSetObserver() {
@@ -139,94 +140,28 @@ public class SearchAdapter extends BaseAdapter {
 		ImageView iconView = null;
 		try
 		{
-										
 				SearchIndex index = (SearchIndex)this.getItem(position);
-								
-				
+							
 				layout = (LinearLayout)convertView;
-				
 				if(layout == null)
 				{
 					layout = new LinearLayout(parent.getContext());
-					
-					LinearLayout.LayoutParams textViewParams = 
-		        			new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT);
-		        	
-		        	        	
-		        	textViewParams.weight = 80f;
-		        	
-		        	
 					textView = new TextView(parent.getContext());
 					iconView = new ImageView(parent.getContext());
 									iconView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-					iconView.setAdjustViewBounds(true);
-					
-					textView.setTextSize(TypedValue.COMPLEX_UNIT_FRACTION_PARENT, 25);
-					
-					int textSize = (int)textView.getTextSize();
-					
-					LinearLayout.LayoutParams imageViewParams = 
-		        			new LinearLayout.LayoutParams(textSize * 2, textSize * 2);
-										
-					
-					layout.addView(textView, textViewParams);
-					layout.addView(iconView, imageViewParams);
-					
-					
-					
+					initViewLayout(layout, textView, iconView);
 				}
 				else
 				{
-					textView = (TextView)layout.getChildAt(0);
-					iconView = (ImageView)layout.getChildAt(1);
-				}
-				
-				String text = null;
-				Drawable icon = null;
-				IconObtainer obtainer = null;
-				if(index.isCategory())
-				{
-					layout.setBackgroundColor(Color.GRAY);
-					text = index.getSuggestionProvider().getName();
-					if(index.getSuggestionProvider().getHint() != null)
-					{
-						text += "\n" + index.getSuggestionProvider().getHint();
-					}
-					obtainer = index.getSuggestionProvider().getIcon();
-										
-				}
-				else
-				{
-					layout.setBackgroundColor(layout.getDrawingCacheBackgroundColor());
-					text = index.getSuggestion().getText1();
-					obtainer = index.getSuggestion().getIcon1();
+					iconView = (ImageView)layout.getChildAt(0);
+					textView = (TextView)layout.getChildAt(1);
 					
 				}
-				textView.setText(text);
 				
-				if(obtainer != null)
-				{
-						final ImageView updatingImageView = iconView;
-						final IconObtainer updatingObtainer = obtainer;
-						final Activity updatingActivity = mActivity;
-						obtainer.setIconReadyListener(new Runnable() {
-							
-							public void run() {
-								updatingActivity.runOnUiThread(new Runnable() {
-									
-									public void run() {
-										updatingImageView.setImageDrawable(updatingObtainer.getIcon(mPlaceholder));
-										notifyDataSetChanged();
-									}
-								});
-								
-								
-							}
-						});
-						icon = obtainer.getIcon(mPlaceholder);
-						iconView.setImageDrawable(icon);
-					
-				}
+				
+				updateLayout(layout, index);
+				updateImageView(iconView, index);
+				updateTextView(textView, index);
 				
 			
 		}catch (Exception e) {
@@ -234,6 +169,136 @@ public class SearchAdapter extends BaseAdapter {
 			
 		}
 		return layout;
+	}
+	
+	/**
+	 * @param layout
+	 * @param index
+	 */
+	private void updateLayout(LinearLayout layout, SearchIndex index) {
+		if(index.isCategory())
+		{
+			layout.setBackgroundColor(Color.GRAY);
+						
+		}
+		else
+		{
+			layout.setBackgroundColor(layout.getDrawingCacheBackgroundColor());
+				
+		}
+	}
+	/**
+	 * @param iconView
+	 * @param index
+	 */
+	private void updateImageView(ImageView iconView, SearchIndex index) {
+		IconObtainer obtainer = null;
+		if(index.isCategory())
+		{
+						
+			obtainer = index.getSuggestionProvider().getIcon();
+					
+		}
+		else
+		{				
+			obtainer = index.getSuggestion().getIcon1();
+		}
+						
+		if(obtainer != null)
+		{
+			setIcon(iconView, obtainer);
+			
+		}
+	}
+	/**
+	 * @param textView
+	 * @param index
+	 */
+	private void updateTextView(TextView textView, SearchIndex index) {
+		String text = null;
+		if(index.isCategory())
+		{
+			
+			text = index.getSuggestionProvider().getName();
+			if(index.getSuggestionProvider().getHint() != null)
+			{
+				text += "\n" + index.getSuggestionProvider().getHint();
+			}
+			
+								
+		}
+		else
+		{
+			text = index.getSuggestion().getText1();
+		}
+		textView.setText(text);
+		
+		setTextSize(textView, index);
+	}
+	/**
+	 * @param layout
+	 * @param textView
+	 * @param iconView
+	 */
+	private void initViewLayout(LinearLayout layout, TextView textView,
+			ImageView iconView) {
+		LinearLayout.LayoutParams textViewParams = 
+		 		   new LinearLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT);
+			        			        	        	
+		textViewParams.weight = 80f;
+		iconView.setAdjustViewBounds(true);
+						
+		int textSize = (int)textView.getTextSize();
+		
+		LinearLayout.LayoutParams imageViewParams = 
+				new LinearLayout.LayoutParams(textSize * 2, textSize * 2);
+							
+		layout.addView(iconView, imageViewParams);
+		layout.addView(textView, textViewParams);
+	}
+	/**
+	 * @param textView
+	 * @param index
+	 */
+	private void setTextSize(TextView textView, SearchIndex index) {
+		if(index.isCategory())
+		{
+			textView.setTextSize(TypedValue.COMPLEX_UNIT_FRACTION_PARENT, 30);
+			textView.setSingleLine(false);
+		}
+		else
+		{
+			textView.setTextSize(TypedValue.COMPLEX_UNIT_FRACTION_PARENT, 25);
+			textView.setSingleLine(true);
+			textView.setEllipsize(TruncateAt.END);
+		}
+	}
+	
+	/**
+	 * @param iconView
+	 * @param obtainer
+	 */
+	private void setIcon(ImageView iconView, IconObtainer obtainer) {
+		Drawable icon;
+		final ImageView updatingImageView = iconView;
+		final IconObtainer updatingObtainer = obtainer;
+		final Activity updatingActivity = mActivity;
+		obtainer.setIconReadyListener(new Runnable() {
+			
+			public void run() {
+				updatingActivity.runOnUiThread(new Runnable() {
+					
+					public void run() {
+						updatingImageView.setImageDrawable(updatingObtainer.getIcon(mPlaceholder));
+						notifyDataSetChanged();
+					}
+				});
+				
+				
+			}
+		});
+		icon = obtainer.getIcon(mPlaceholder);
+		iconView.setImageDrawable(icon);
 	}
 	
 	public void addSearchProcessListener(ISearchProcessListener listener)

@@ -23,8 +23,7 @@ public class SettingsAdapter extends BaseAdapter {
 
 	public SettingsAdapter(Context context) {
 		mSearch = new FullSearchComposer(context).getSearch();
-		
-		
+		mPlaceholder = context.getResources().getDrawable(android.R.drawable.sym_def_app_icon);
 	}
 	
 	public int getCount() {

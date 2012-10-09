@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -74,8 +75,7 @@ public class Search {
 				}
 			}
 		}
-		mSuggestionsInternal.clear();
-		mCount = 0;
+			
 		mExecutor = new ThreadPoolExecutor(getMinThreadsCount(), getMaxThreadsCount(), 1000, TimeUnit.MILLISECONDS,
 				new LinkedBlockingQueue<Runnable>());
 		mSuggestions.clear();
@@ -99,8 +99,14 @@ public class Search {
 
 						if(useProvider(provider))
 						{
-							mExecutor.submit(new SearchTask(this, provider.getSuggestionsLoader(query, maxResults)));
-							searchStarted = true;
+							SearchTask task = new SearchTask(this, provider.getSuggestionsLoader(query, maxResults));
+							mExecutor.submit(task);
+							if(task != null)
+							{
+								mSuggestions.add(task);
+								searchStarted = true;
+							}
+							
 						}
 							
 					}
@@ -118,10 +124,46 @@ public class Search {
 	 */
 	public int getCount()
 	{
-		synchronized (mSuggestionsInternal) {
-			return mCount;	
+		int count = 0;
+		for (Future<Suggestions> task : mSuggestions) {
+			if(task.isDone())
+			{
+				int curCount = getSuggestionsCountFromTask(task); 
+				count += curCount;
+				if(getSplitByCategories() && curCount > 0)
+				{
+					count ++;
+				}
+			}
+						
+		}
+		return count;
+	}
+	
+	/**Obtains count of results in provided future task 
+	 * @param task future task 
+	 * @return count of results or 0 if it can't be obtained
+	 */
+	private int getSuggestionsCountFromTask(Future<Suggestions> task) {
+		Suggestions suggestions = null;
+		
+		try {
+			suggestions = task.get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			return 0;
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+			return 0;
 		}
 		
+		if(suggestions == null || suggestions.getCount() <= 0)
+		{
+			return 0;
+		}
+		int count = suggestions.getCount();
+		
+		return count;
 	}
 	
 	/** obtains SearchIndex for given position
@@ -130,22 +172,29 @@ public class Search {
 	 */
 	public SearchIndex getAt(int pos)
 	{
-		
-		synchronized (mSuggestionsInternal) {
-			int i = 0;
-			for (Suggestions suggestions : mSuggestionsInternal) {
-				if(suggestions == null || suggestions.getCount() <= 0 
-						)
+		int i = 0;
+		for (Future<Suggestions> task : mSuggestions) {
+			if(task.isDone())
+			{
+				Suggestions suggestions = null;
+				try {
+					suggestions = task.get();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
+				int count = getSuggestionsCountFromTask(task); 
+				if(count <= 0)
 				{
 					continue;
 				}
 				
-				int bound = i + suggestions.getCount();
+				int bound = i + count;
 				if(!getSplitByCategories())
 				{
 					bound --;
 				}
-				
 				if (i == pos || pos <= bound )
 				{
 					Integer index = null;
@@ -170,16 +219,18 @@ public class Search {
 					return sIndex;
 				}
 						
-				i += suggestions.getCount();
+				i += count;
 				if(getSplitByCategories())
 				{
 					i++;
 				}
 				
 			}
-			
-			return null;
+						
 		}
+		
+		return null;
+		
 						
 	}
 	
@@ -239,17 +290,13 @@ public class Search {
 	 * @param suggestions
 	 */
 	public void onSuggestionsReady(Suggestions suggestions) {
-		
-		synchronized (mSuggestionsInternal) {
-			mSuggestionsInternal.add(suggestions);
-			mCount = getCountFromState();
+										
 			onDataSetChanged();
 			if(mExecutor.getCompletedTaskCount() == mExecutor.getTaskCount() - 1)
 			{
 				onWorkEnd();
 			}
-		}
-			
+					
 	}
 			
 	/** Setup callback which will be called when search will start
@@ -327,27 +374,7 @@ public class Search {
 		
 	}
 	
-	private int getCountFromState()
-	{
-			int count = 0;
-			for (Suggestions suggestions : mSuggestionsInternal) {
-				if(suggestions == null || suggestions.getCount() <= 0 
-						)
-				{
-					continue;
-				}
-				
-				count += suggestions.getCount();
-				if(getSplitByCategories())
-				{
-					count++;
-				}
-				
-			}
-			return count;	
-		
-		
-	}
+	
 	
 	@SuppressWarnings("unused")
 	private void onDataSetInvalidated()
@@ -358,21 +385,18 @@ public class Search {
 	}
 	
 	private void onWorkStart() {
-		synchronized (mSuggestionsInternal) {
-			mCount = getCountFromState();
+		
 			onDataSetChanged();
 			if(mStartListener != null)
 			{
 				mStartListener.run();
 			}	
-		}
+		
 		
 	}
 	
 	private void onWorkEnd() {
-		synchronized (mSuggestionsInternal) {
-			
-			mCount = getCountFromState();
+		
 			if(mEndListener != null)
 			{
 				
@@ -380,7 +404,7 @@ public class Search {
 				
 			}	
 			onDataSetChanged();
-		}
+		
 		
 	}
 
@@ -408,13 +432,11 @@ public class Search {
 		return 8;
 	}
 	
-	private List<Future<Suggestions>> mSuggestions = new ArrayList<Future<Suggestions>>();
+	private List<SearchTask> mSuggestions = new ArrayList<SearchTask>();
 	private List<ProvidersPack> mProviderPacks = new ArrayList<ProvidersPack>(); 
 	private Boolean mSplitByCategories = false;
 	private SearchSettings mSettings = null;
 	private Set<DataSetObserver> mObservers = new HashSet<DataSetObserver>();
-	private List<Suggestions> mSuggestionsInternal = new ArrayList<Suggestions>();
-	private int mCount = 0;
 	private Runnable mStartListener = null;
 	private Runnable mEndListener = null;
 	private ThreadPoolExecutor mExecutor = null;
