@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
@@ -27,7 +28,7 @@ import com.epam.search.data.Suggestion;
 
 public class AnotherSearchActivity extends Activity implements ISearchProcessListener{
     
-
+private final static long DELAY = 1000;
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -161,7 +162,15 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
 				int count) {
 			try
 			{
-				mSearchAdapter.setQuery(s);
+				onSearchStarted();
+				final CharSequence query = s;
+				mSearchQueryHandler.postDelayed(new Runnable() {
+					
+					public void run() {
+						mSearchAdapter.setQuery(query);
+					}
+				}, DELAY);
+				
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -172,7 +181,7 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
     	
     }
     
-    private SearchAdapter mSearchAdapter = null;
+    
 
 	public void onSearchStarted() {
 		EditText searchView = ((EditText)findViewById(R.id.etSearch));
@@ -203,5 +212,9 @@ public class AnotherSearchActivity extends Activity implements ISearchProcessLis
 			imm.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 		}
 	}
-		
+	//Data
+	private SearchAdapter mSearchAdapter = null;
+	private Handler mSearchQueryHandler = new Handler();
+	
+	
 }
