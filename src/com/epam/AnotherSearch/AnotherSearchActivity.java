@@ -1,6 +1,9 @@
 package com.epam.AnotherSearch;
 
 
+import java.util.LinkedList;
+import java.util.List;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -164,12 +167,15 @@ private final static long DELAY = 1000;
 			{
 				onSearchStarted();
 				final CharSequence query = s;
-				mSearchQueryHandler.postDelayed(new Runnable() {
+				Runnable request = new Runnable() {
 					
 					public void run() {
 						mSearchAdapter.setQuery(query);
 					}
-				}, DELAY);
+				};
+				mSearchQueryHandler.removeCallbacks(mLastRequest);
+				mLastRequest = request;
+				mSearchQueryHandler.postDelayed(request, DELAY);
 				
 			}
 			catch (Exception e) {
@@ -214,6 +220,7 @@ private final static long DELAY = 1000;
 	}
 	//Data
 	private SearchAdapter mSearchAdapter = null;
+	private Runnable mLastRequest = null;
 	private Handler mSearchQueryHandler = new Handler();
 	
 	
