@@ -9,6 +9,13 @@ import com.epam.search.util.NotifiedLoadable.OnLoadFinishedListener;
 
 class SearchTask extends FutureTask<Suggestions> {
 
+	@Override
+	protected void done() {
+		
+		mLoader.onLoadFinished();
+		super.done();
+	}
+
 	public SearchTask(final Search search, final NotifiedLoadable<Suggestions> loader)
 	{
 		
@@ -23,14 +30,15 @@ class SearchTask extends FutureTask<Suggestions> {
 		loader.setOnLoadFinishedListener(new OnLoadFinishedListener() {
 			
 			public void onLoadFinished() {
-				if(! isCancelled())
-				{
+				if(isDone())
+				{					
 					search.onSuggestionsReady(loader.getLoaded());
 				}
 				
 			}
 		});
+		mLoader = loader;
 	}
 	
-
+NotifiedLoadable<Suggestions> mLoader;
 }
